@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Globe, LogOut } from "lucide-react";
-import { LANG_KEY, PHONE_KEY, ROLE_KEY, t } from "@/lib/i18n";
+import { PHONE_KEY, ROLE_KEY, t } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 type Props = {
   back?: string;
@@ -10,8 +11,9 @@ type Props = {
 
 export function AppHeader({ back, title, showLogout }: Props) {
   const navigate = useNavigate();
-  const logout = () => {
-    localStorage.removeItem(LANG_KEY);
+  const logout = async () => {
+    await supabase.auth.signOut();
+    // Clear any leftover demo keys
     localStorage.removeItem(PHONE_KEY);
     localStorage.removeItem(ROLE_KEY);
     navigate({ to: "/" });
