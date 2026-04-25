@@ -19,15 +19,7 @@ function LanguagePage() {
 
   const onContinue = () => {
     setLang(selected);
-    if (typeof window !== "undefined" && localStorage.getItem("vf_phone")) {
-      // already logged in, go to role redirect
-      const role = localStorage.getItem("vf_role");
-      if (role === "customer") navigate({ to: "/customer" });
-      else if (role === "shopkeeper") navigate({ to: "/shopkeeper" });
-      else navigate({ to: "/role" });
-    } else {
-      navigate({ to: "/login" });
-    }
+    navigate({ to: "/login" });
   };
 
   return (

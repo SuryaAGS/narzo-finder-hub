@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Store, Sparkles } from "lucide-react";
 import heroImg from "@/assets/hero-village.jpg";
-import { LANG_KEY, PHONE_KEY, ROLE_KEY, t, getLang } from "@/lib/i18n";
+import { LANG_KEY, t, getLang } from "@/lib/i18n";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/")({
   component: Splash,
@@ -11,18 +12,19 @@ export const Route = createFileRoute("/")({
 
 function Splash() {
   const navigate = useNavigate();
+  const { session, role, loading } = useAuth();
 
+  // Auto-route signed-in users
   useEffect(() => {
-    // auto-route returning users
-    if (typeof window === "undefined") return;
-    const lang = localStorage.getItem(LANG_KEY);
-    const phone = localStorage.getItem(PHONE_KEY);
-    const role = localStorage.getItem(ROLE_KEY);
-    if (lang && phone && role === "customer") navigate({ to: "/customer" });
-    else if (lang && phone && role === "shopkeeper") navigate({ to: "/shopkeeper" });
-  }, [navigate]);
+    if (loading) return;
+    if (!session) return;
+    if (role === "customer") navigate({ to: "/customer" });
+    else if (role === "shopkeeper") navigate({ to: "/merchant" });
+    else navigate({ to: "/role" });
+  }, [loading, session, role, navigate]);
 
   const lang = typeof window !== "undefined" ? getLang() : "en";
+  const hasLang = typeof window !== "undefined" && !!localStorage.getItem(LANG_KEY);
 
   return (
     <main className="relative min-h-screen overflow-hidden">
@@ -74,7 +76,7 @@ function Splash() {
             </div>
 
             <button
-              onClick={() => navigate({ to: "/language" })}
+              onClick={() => navigate({ to: hasLang ? "/login" : "/language" })}
               className="mt-6 w-full rounded-2xl bg-gradient-warm px-6 py-4 text-lg font-bold text-primary-foreground shadow-warm transition-transform active:scale-[0.98]"
             >
               {t("continue", lang)} →
