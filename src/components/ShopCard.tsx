@@ -12,9 +12,9 @@ type Props = {
 
 export function ShopCard({ shop, matchedItems, query }: Props) {
   const waMessage = encodeURIComponent(
-    `Hi ${shop.owner}, I'm checking VillageFinder. Do you have ${
+    `Hi! I'm checking VillageFinder. Do you have ${
       query || matchedItems[0]?.name || "this item"
-    } in stock? — Thank you!`,
+    } in stock at ${shop.name}? — Thank you!`,
   );
   const waUrl = `https://wa.me/${shop.whatsapp}?text=${waMessage}`;
 
@@ -28,13 +28,16 @@ export function ShopCard({ shop, matchedItems, query }: Props) {
         <div className="min-w-0">
           <h3 className="font-display text-xl font-bold leading-tight">{shop.name}</h3>
           <p className="text-sm text-muted-foreground">
-            {shop.category} · {shop.owner}
+            {shop.category}
+            {shop.village ? ` · ${shop.village}` : ""}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" />
-              {shop.distanceKm} km {t("distanceAway")}
-            </span>
+            {shop.distanceKm > 0 && (
+              <span className="inline-flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                {shop.distanceKm} km {t("distanceAway")}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
               {t("lastUpdated")} {timeAgo(shop.updatedAt)}

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -10,122 +10,169 @@ import {
   Sparkles,
   Square,
   Loader2,
+  Store,
 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
-import { POPULAR_BY_CATEGORY, CATEGORIES, timeAgo, type InventoryItem } from "@/lib/mockData";
+import { POPULAR_BY_CATEGORY, CATEGORIES, timeAgo } from "@/lib/mockData";
 import { t } from "@/lib/i18n";
 import { parseVoiceCommand, type ParsedItem } from "@/lib/voiceParser";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/shopkeeper")({
   component: ShopkeeperPage,
 });
 
-type LocalItem = InventoryItem;
+type DbItem = {
+  id: string;
+  name: string;
+  aliases: string[];
+  price: number;
+  unit: string;
+  status: "in" | "out";
+  updated_at: string;
+};
 
-const STORAGE_KEY = "vf_shop_inventory";
-const CAT_KEY = "vf_shop_category";
-
-function loadInventory(): LocalItem[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as LocalItem[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveInventory(items: LocalItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-}
+type DbShop = {
+  id: string;
+  name: string;
+  category: string;
+  village: string;
+  whatsapp: string;
+};
 
 function ShopkeeperPage() {
-  const [category, setCategory] = useState<string>(CATEGORIES[0]);
-  const [items, setItems] = useState<LocalItem[]>([]);
+  const navigate = useNavigate();
+  const { user, role, loading: authLoading } = useAuth();
+  const [shop, setShop] = useState<DbShop | null>(null);
+  const [items, setItems] = useState<DbItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
 
+  // Auth gate
   useEffect(() => {
-    setCategory(localStorage.getItem(CAT_KEY) || CATEGORIES[0]);
-    setItems(loadInventory());
-  }, []);
+    if (authLoading) return;
+    if (!user) navigate({ to: "/login" });
+    else if (role === "customer") navigate({ to: "/customer" });
+    else if (!role) navigate({ to: "/role" });
+  }, [authLoading, user, role, navigate]);
 
+  // Load shop + inventory
   useEffect(() => {
-    saveInventory(items);
-  }, [items]);
+    if (!user || role !== "shopkeeper") return;
+    let mounted = true;
+    (async () => {
+      const { data: shops } = await supabase
+        .from("shops")
+        .select("id, name, category, village, whatsapp")
+        .eq("owner_id", user.id)
+        .limit(1);
+      if (!mounted) return;
+      const myShop = (shops?.[0] as DbShop | undefined) ?? null;
+      setShop(myShop);
+      if (myShop) {
+        const { data: inv } = await supabase
+          .from("inventory")
+          .select("id, name, aliases, price, unit, status, updated_at")
+          .eq("shop_id", myShop.id)
+          .order("updated_at", { ascending: false });
+        if (mounted) setItems((inv as unknown as DbItem[]) ?? []);
+      }
+      setLoading(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [user, role]);
 
-  const popular = useMemo(() => POPULAR_BY_CATEGORY[category] ?? [], [category]);
+  const popular = useMemo(
+    () => (shop ? (POPULAR_BY_CATEGORY[shop.category] ?? []) : []),
+    [shop],
+  );
 
   const findItem = (name: string) =>
     items.find((i) => i.name.toLowerCase() === name.toLowerCase());
 
+  const upsertItem = async (
+    name: string,
+    fields: { price?: number; unit?: string; status?: "in" | "out" },
+  ) => {
+    if (!shop) return;
+    const existing = findItem(name);
+    if (existing) {
+      const { data, error } = await supabase
+        .from("inventory")
+        .update({
+          ...(fields.price !== undefined ? { price: fields.price } : {}),
+          ...(fields.unit ? { unit: fields.unit } : {}),
+          ...(fields.status ? { status: fields.status } : {}),
+        })
+        .eq("id", existing.id)
+        .select("id, name, aliases, price, unit, status, updated_at")
+        .single();
+      if (!error && data) {
+        setItems((prev) => prev.map((i) => (i.id === existing.id ? (data as DbItem) : i)));
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("inventory")
+        .insert({
+          shop_id: shop.id,
+          name,
+          aliases: [name.toLowerCase()],
+          price: fields.price ?? 0,
+          unit: fields.unit ?? "pc",
+          status: fields.status ?? "in",
+        })
+        .select("id, name, aliases, price, unit, status, updated_at")
+        .single();
+      if (!error && data) {
+        setItems((prev) => [data as DbItem, ...prev]);
+      }
+    }
+  };
+
   const toggleStock = (templateName: string, unit: string, defaultPrice: number) => {
     const existing = findItem(templateName);
-    const now = Date.now();
     if (existing) {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === existing.id
-            ? { ...i, status: i.status === "in" ? "out" : "in", updatedAt: now }
-            : i,
-        ),
-      );
+      upsertItem(templateName, { status: existing.status === "in" ? "out" : "in" });
     } else {
-      setItems((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          name: templateName,
-          aliases: [templateName.toLowerCase()],
-          price: defaultPrice,
-          unit,
-          status: "in",
-          updatedAt: now,
-        },
-      ]);
+      upsertItem(templateName, { price: defaultPrice, unit, status: "in" });
     }
   };
 
   const updatePrice = (id: string, price: number) => {
-    setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, price, updatedAt: Date.now() } : i)),
-    );
+    supabase
+      .from("inventory")
+      .update({ price })
+      .eq("id", id)
+      .select("id, name, aliases, price, unit, status, updated_at")
+      .single()
+      .then(({ data }) => {
+        if (data) setItems((prev) => prev.map((i) => (i.id === id ? (data as DbItem) : i)));
+      });
   };
 
-  const addParsed = (p: ParsedItem) => {
-    const existing = findItem(p.name);
-    const now = Date.now();
-    if (existing) {
-      setItems((prev) =>
-        prev.map((i) =>
-          i.id === existing.id
-            ? {
-                ...i,
-                price: p.price ?? i.price,
-                unit: p.unit ?? i.unit,
-                status: p.status ?? "in",
-                updatedAt: now,
-              }
-            : i,
-        ),
-      );
-    } else {
-      setItems((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          name: p.name,
-          aliases: [p.name.toLowerCase()],
-          price: p.price ?? 0,
-          unit: p.unit ?? "pc",
-          status: p.status ?? "in",
-          updatedAt: now,
-        },
-      ]);
-    }
-  };
+  const addParsed = (p: ParsedItem) =>
+    upsertItem(p.name, { price: p.price, unit: p.unit, status: p.status ?? "in" });
 
   const inStockCount = items.filter((i) => i.status === "in").length;
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen">
+        <AppHeader showLogout />
+        <div className="flex items-center justify-center pt-20 text-muted-foreground">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("loading")}
+        </div>
+      </div>
+    );
+  }
+
+  if (!shop) {
+    return <ShopSetup onCreated={(s) => setShop(s)} />;
+  }
 
   return (
     <div className="min-h-screen pb-28">
@@ -138,41 +185,20 @@ function ShopkeeperPage() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm opacity-90">Today's stock</p>
+              <p className="text-sm opacity-90">{shop.name}</p>
               <p className="font-display text-4xl font-black">
                 {inStockCount}{" "}
                 <span className="text-base font-bold opacity-80">
                   / {items.length} items
                 </span>
               </p>
+              <p className="mt-1 text-xs opacity-80">
+                {shop.category} · {shop.village}
+              </p>
             </div>
             <Sparkles className="h-10 w-10 opacity-60" />
           </div>
         </motion.div>
-
-        <div className="mt-6">
-          <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Shop category
-          </label>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {CATEGORIES.map((c) => (
-              <button
-                key={c}
-                onClick={() => {
-                  setCategory(c);
-                  localStorage.setItem(CAT_KEY, c);
-                }}
-                className={`rounded-full px-4 py-2 text-sm font-bold transition-all ${
-                  c === category
-                    ? "bg-foreground text-background shadow-soft"
-                    : "border border-border bg-card text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
 
         <section className="mt-6">
           <h2 className="font-display text-xl font-bold">{t("popularItems")}</h2>
@@ -203,7 +229,9 @@ function ShopkeeperPage() {
                         className="w-16 rounded-md border border-border bg-background px-2 py-0.5 font-semibold text-foreground outline-none focus:border-primary"
                       />
                       <span>/ {p.unit}</span>
-                      {existing && <span>· {timeAgo(existing.updatedAt)}</span>}
+                      {existing && (
+                        <span>· {timeAgo(new Date(existing.updated_at).getTime())}</span>
+                      )}
                     </div>
                   </div>
                   <button
@@ -250,22 +278,12 @@ function ShopkeeperPage() {
                     <div className="min-w-0">
                       <p className="truncate font-bold">{i.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        ₹{i.price} / {i.unit} · {timeAgo(i.updatedAt)}
+                        ₹{i.price} / {i.unit} · {timeAgo(new Date(i.updated_at).getTime())}
                       </p>
                     </div>
                     <button
                       onClick={() =>
-                        setItems((prev) =>
-                          prev.map((it) =>
-                            it.id === i.id
-                              ? {
-                                  ...it,
-                                  status: it.status === "in" ? "out" : "in",
-                                  updatedAt: Date.now(),
-                                }
-                              : it,
-                          ),
-                        )
+                        upsertItem(i.name, { status: i.status === "in" ? "out" : "in" })
                       }
                       className={`rounded-xl px-3 py-2 text-xs font-bold ${
                         i.status === "in"
@@ -309,6 +327,143 @@ function ShopkeeperPage() {
   );
 }
 
+function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
+  const { user } = useAuth();
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState<string>(CATEGORIES[0]);
+  const [village, setVillage] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSaving(true);
+    setError(null);
+    const { data, error: insErr } = await supabase
+      .from("shops")
+      .insert({
+        owner_id: user.id,
+        name: name.trim(),
+        category,
+        village: village.trim(),
+        whatsapp: `91${whatsapp.replace(/\D/g, "")}`,
+      })
+      .select("id, name, category, village, whatsapp")
+      .single();
+    setSaving(false);
+    if (insErr) {
+      setError(insErr.message);
+      return;
+    }
+    if (data) onCreated(data as DbShop);
+  };
+
+  return (
+    <div className="min-h-screen">
+      <AppHeader title={t("setupShop")} showLogout />
+      <main className="mx-auto max-w-2xl px-5 py-8">
+        <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-secondary shadow-soft">
+          <Store className="h-8 w-8 text-secondary-foreground" />
+        </div>
+        <h2 className="mt-6 font-display text-3xl font-black text-balance">{t("setupShop")}</h2>
+        <p className="mt-1 text-muted-foreground">
+          Tell villagers about your shop. You can change this anytime.
+        </p>
+
+        <form onSubmit={submit} className="mt-6 space-y-3">
+          <Field label={t("shopName")}>
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Lakshmi Kirana"
+              className="w-full bg-transparent px-4 py-3 text-lg outline-none"
+            />
+          </Field>
+
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Category
+            </label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {CATEGORIES.map((c) => (
+                <button
+                  type="button"
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={`rounded-full px-4 py-2 text-sm font-bold transition-all ${
+                    c === category
+                      ? "bg-foreground text-background shadow-soft"
+                      : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Field label={t("village")}>
+            <input
+              required
+              value={village}
+              onChange={(e) => setVillage(e.target.value)}
+              placeholder="Pothavaram"
+              className="w-full bg-transparent px-4 py-3 text-lg outline-none"
+            />
+          </Field>
+
+          <Field label={t("whatsappNumber")}>
+            <div className="flex items-center gap-2 px-3">
+              <span className="rounded-xl bg-muted px-3 py-2 font-bold">+91</span>
+              <input
+                required
+                type="tel"
+                inputMode="numeric"
+                maxLength={10}
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ""))}
+                placeholder="9876543210"
+                className="w-full bg-transparent py-2 text-lg font-bold tracking-wider outline-none"
+              />
+            </div>
+          </Field>
+
+          {error && (
+            <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={saving || whatsapp.length !== 10}
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-warm px-6 py-4 text-lg font-bold text-primary-foreground shadow-warm transition-transform active:scale-[0.98] disabled:opacity-60"
+          >
+            {saving && <Loader2 className="h-5 w-5 animate-spin" />}
+            {t("saveShop")} →
+          </button>
+        </form>
+      </main>
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </label>
+      <div className="mt-1 rounded-3xl border-2 border-border bg-card focus-within:border-primary">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function VoiceModal({
   onClose,
   onAdd,
@@ -320,19 +475,23 @@ function VoiceModal({
   const [transcript, setTranscript] = useState("");
   const [parsed, setParsed] = useState<ParsedItem | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const recRef = useRef<any>(null);
+  const recRef = useRef<{ stop: () => void } | null>(null);
 
   const start = () => {
     setError(null);
     setTranscript("");
     setParsed(null);
-    const w = window as any;
+    const w = window as unknown as {
+      SpeechRecognition?: new () => unknown;
+      webkitSpeechRecognition?: new () => unknown;
+    };
     const SpeechRecognition = w.SpeechRecognition || w.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setError("Voice recognition not supported on this browser. Try Chrome on Android.");
       return;
     }
-    const rec = new SpeechRecognition();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const rec: any = new (SpeechRecognition as any)();
     rec.lang = "en-IN";
     rec.interimResults = true;
     rec.continuous = false;
@@ -347,6 +506,7 @@ function VoiceModal({
     rec.onerror = (e: any) => setError(e.error || "Recognition error");
     rec.onend = () => setListening(false);
     rec.start();
+    /* eslint-enable @typescript-eslint/no-explicit-any */
     recRef.current = rec;
     setListening(true);
   };
@@ -463,6 +623,7 @@ function ScanModal({
 
   useEffect(() => {
     let stream: MediaStream | null = null;
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     let detector: any = null;
     let raf = 0;
     (async () => {
@@ -504,6 +665,7 @@ function ScanModal({
         setError(e?.message || "Camera permission denied");
       }
     })();
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
     return () => {
       cancelAnimationFrame(raf);
@@ -551,7 +713,7 @@ function ScanModal({
           <div className="pointer-events-none absolute inset-x-8 top-1/2 h-0.5 -translate-y-1/2 bg-primary shadow-warm" />
         </div>
 
-        {error && <p className="mt-3 text-sm text-warning-foreground">{error}</p>}
+        {error && <p className="mt-3 text-sm text-muted-foreground">{error}</p>}
 
         <div className="mt-4 space-y-2">
           <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
