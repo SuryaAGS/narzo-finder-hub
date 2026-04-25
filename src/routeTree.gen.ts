@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShopkeeperRouteImport } from './routes/shopkeeper'
 import { Route as RoleRouteImport } from './routes/role'
+import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LanguageRouteImport } from './routes/language'
+import { Route as CustomerRouteImport } from './routes/customer'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ShopkeeperRoute = ShopkeeperRouteImport.update({
@@ -25,6 +27,11 @@ const RoleRoute = RoleRouteImport.update({
   path: '/role',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MerchantRoute = MerchantRouteImport.update({
+  id: '/merchant',
+  path: '/merchant',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -35,6 +42,11 @@ const LanguageRoute = LanguageRouteImport.update({
   path: '/language',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomerRoute = CustomerRouteImport.update({
+  id: '/customer',
+  path: '/customer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,38 +55,68 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/customer': typeof CustomerRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
+  '/merchant': typeof MerchantRoute
   '/role': typeof RoleRoute
   '/shopkeeper': typeof ShopkeeperRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/customer': typeof CustomerRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
+  '/merchant': typeof MerchantRoute
   '/role': typeof RoleRoute
   '/shopkeeper': typeof ShopkeeperRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/customer': typeof CustomerRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
+  '/merchant': typeof MerchantRoute
   '/role': typeof RoleRoute
   '/shopkeeper': typeof ShopkeeperRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/language' | '/login' | '/role' | '/shopkeeper'
+  fullPaths:
+    | '/'
+    | '/customer'
+    | '/language'
+    | '/login'
+    | '/merchant'
+    | '/role'
+    | '/shopkeeper'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/language' | '/login' | '/role' | '/shopkeeper'
-  id: '__root__' | '/' | '/language' | '/login' | '/role' | '/shopkeeper'
+  to:
+    | '/'
+    | '/customer'
+    | '/language'
+    | '/login'
+    | '/merchant'
+    | '/role'
+    | '/shopkeeper'
+  id:
+    | '__root__'
+    | '/'
+    | '/customer'
+    | '/language'
+    | '/login'
+    | '/merchant'
+    | '/role'
+    | '/shopkeeper'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CustomerRoute: typeof CustomerRoute
   LanguageRoute: typeof LanguageRoute
   LoginRoute: typeof LoginRoute
+  MerchantRoute: typeof MerchantRoute
   RoleRoute: typeof RoleRoute
   ShopkeeperRoute: typeof ShopkeeperRoute
 }
@@ -95,6 +137,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/merchant': {
+      id: '/merchant'
+      path: '/merchant'
+      fullPath: '/merchant'
+      preLoaderRoute: typeof MerchantRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -109,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LanguageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customer': {
+      id: '/customer'
+      path: '/customer'
+      fullPath: '/customer'
+      preLoaderRoute: typeof CustomerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -121,8 +177,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CustomerRoute: CustomerRoute,
   LanguageRoute: LanguageRoute,
   LoginRoute: LoginRoute,
+  MerchantRoute: MerchantRoute,
   RoleRoute: RoleRoute,
   ShopkeeperRoute: ShopkeeperRoute,
 }
