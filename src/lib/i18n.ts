@@ -1,6 +1,7 @@
 export type Lang = "en" | "hi" | "te";
 
 export const LANG_KEY = "vf_lang";
+// kept for backward compat with any UI still referencing them
 export const ROLE_KEY = "vf_role";
 export const PHONE_KEY = "vf_phone";
 
@@ -12,12 +13,14 @@ const dict = {
     tagline: "Find shops, prices & stock in your village",
     chooseLang: "Choose your language",
     continue: "Continue",
-    phoneTitle: "Enter your phone number",
-    phoneHelp: "We'll send you a quick code",
-    phonePlaceholder: "10-digit mobile number",
-    sendOtp: "Send OTP",
-    otpTitle: "Enter the 6-digit code",
-    verify: "Verify & continue",
+    emailTitle: "Sign in to VillageFinder",
+    emailHelp: "Use your email and a password",
+    emailPlaceholder: "you@example.com",
+    passwordPlaceholder: "Password (6+ characters)",
+    signIn: "Sign in",
+    signUp: "Create account",
+    haveAccount: "Already have an account? Sign in",
+    needAccount: "New here? Create an account",
     chooseRole: "How will you use VillageFinder?",
     customer: "I'm shopping",
     customerDesc: "Find items in nearby shops",
@@ -37,18 +40,27 @@ const dict = {
     popularItems: "Popular items",
     listening: "Listening… speak now",
     tapInStock: "Tap to mark in stock",
+    setupShop: "Set up your shop",
+    shopName: "Shop name",
+    village: "Village",
+    whatsappNumber: "WhatsApp number (10 digits)",
+    saveShop: "Save shop",
+    nearbyShops: "Nearby shops",
+    loading: "Loading…",
   },
   hi: {
     appName: "विलेजफाइंडर",
     tagline: "अपने गाँव की दुकानें, दाम और स्टॉक देखें",
     chooseLang: "अपनी भाषा चुनें",
     continue: "आगे बढ़ें",
-    phoneTitle: "अपना मोबाइल नंबर डालें",
-    phoneHelp: "हम आपको एक कोड भेजेंगे",
-    phonePlaceholder: "10 अंकों का मोबाइल नंबर",
-    sendOtp: "OTP भेजें",
-    otpTitle: "6 अंकों का कोड डालें",
-    verify: "जाँचें और आगे बढ़ें",
+    emailTitle: "विलेजफाइंडर में लॉगिन करें",
+    emailHelp: "ईमेल और पासवर्ड डालें",
+    emailPlaceholder: "you@example.com",
+    passwordPlaceholder: "पासवर्ड (6+ अक्षर)",
+    signIn: "लॉगिन",
+    signUp: "खाता बनाएँ",
+    haveAccount: "खाता है? लॉगिन करें",
+    needAccount: "नए हैं? खाता बनाएँ",
     chooseRole: "आप कैसे इस्तेमाल करेंगे?",
     customer: "मुझे सामान चाहिए",
     customerDesc: "पास की दुकानों में खोजें",
@@ -68,18 +80,27 @@ const dict = {
     popularItems: "लोकप्रिय सामान",
     listening: "सुन रहे हैं… अब बोलें",
     tapInStock: "स्टॉक में मार्क करें",
+    setupShop: "अपनी दुकान सेट करें",
+    shopName: "दुकान का नाम",
+    village: "गाँव",
+    whatsappNumber: "व्हाट्सएप नंबर (10 अंक)",
+    saveShop: "दुकान सेव करें",
+    nearbyShops: "पास की दुकानें",
+    loading: "लोड हो रहा है…",
   },
   te: {
     appName: "విలేజ్‌ఫైండర్",
     tagline: "మీ ఊరి దుకాణాలు, ధరలు, స్టాక్ చూడండి",
     chooseLang: "మీ భాష ఎంచుకోండి",
     continue: "కొనసాగించు",
-    phoneTitle: "మీ ఫోన్ నంబర్ ఇవ్వండి",
-    phoneHelp: "మేము ఒక కోడ్ పంపిస్తాము",
-    phonePlaceholder: "10 అంకెల మొబైల్ నంబర్",
-    sendOtp: "OTP పంపు",
-    otpTitle: "6 అంకెల కోడ్ ఇవ్వండి",
-    verify: "ధృవీకరించి కొనసాగు",
+    emailTitle: "విలేజ్‌ఫైండర్‌లోకి సైన్ ఇన్",
+    emailHelp: "ఇమెయిల్ మరియు పాస్‌వర్డ్ ఇవ్వండి",
+    emailPlaceholder: "you@example.com",
+    passwordPlaceholder: "పాస్‌వర్డ్ (6+ అక్షరాలు)",
+    signIn: "సైన్ ఇన్",
+    signUp: "ఖాతా సృష్టించు",
+    haveAccount: "ఖాతా ఉందా? సైన్ ఇన్",
+    needAccount: "కొత్తవారా? ఖాతా సృష్టించు",
     chooseRole: "మీరు ఎలా వాడతారు?",
     customer: "నాకు సామాను కావాలి",
     customerDesc: "దగ్గరి దుకాణాల్లో వెతుకు",
@@ -99,6 +120,13 @@ const dict = {
     popularItems: "ప్రాచుర్యం పొందిన వస్తువులు",
     listening: "వింటున్నాం… ఇప్పుడు మాట్లాడండి",
     tapInStock: "స్టాక్‌లో అని గుర్తించు",
+    setupShop: "మీ దుకాణాన్ని సెటప్ చేయండి",
+    shopName: "దుకాణం పేరు",
+    village: "ఊరు",
+    whatsappNumber: "వాట్సాప్ నంబర్ (10 అంకెలు)",
+    saveShop: "దుకాణం సేవ్ చేయి",
+    nearbyShops: "దగ్గరి దుకాణాలు",
+    loading: "లోడ్ అవుతోంది…",
   },
 } as const;
 
@@ -115,7 +143,7 @@ export function setLang(l: Lang) {
 
 export function t(key: TKey, lang?: Lang): string {
   const l = lang || getLang();
-  return dict[l][key] ?? dict.en[key];
+  return (dict[l] as Record<string, string>)[key] ?? (dict.en as Record<string, string>)[key];
 }
 
 export const LANGS: { code: Lang; native: string; english: string }[] = [

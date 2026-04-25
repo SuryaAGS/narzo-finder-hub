@@ -1,9 +1,11 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Phone, Shield } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
-import { PHONE_KEY, t } from "@/lib/i18n";
+import { t } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -11,93 +13,122 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const [phone, setPhone] = useState("");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [otp, setOtp] = useState("");
+  const { session, role, loading: authLoading } = useAuth();
+  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const sendOtp = () => {
-    if (phone.replace(/\D/g, "").length !== 10) return;
-    setStep("otp");
-  };
+  // Already signed in? Route to the right place.
+  useEffect(() => {
+    if (authLoading) return;
+    if (!session) return;
+    if (role === "customer") navigate({ to: "/customer" });
+    else if (role === "shopkeeper") navigate({ to: "/merchant" });
+    else navigate({ to: "/role" });
+  }, [authLoading, session, role, navigate]);
 
-  const verify = () => {
-    if (otp.length !== 6) return;
-    localStorage.setItem(PHONE_KEY, phone);
-    navigate({ to: "/role" });
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (mode === "signup") {
+        const { error: signErr } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+          },
+        });
+        if (signErr) throw signErr;
+        // Email confirmation may be off in Cloud — try signing in immediately.
+        await supabase.auth.signInWithPassword({ email, password });
+      } else {
+        const { error: signErr } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signErr) throw signErr;
+      }
+      // useAuth effect will redirect once session/role load.
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      setError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen">
       <AppHeader back="/language" />
       <main className="mx-auto max-w-2xl px-5 py-8">
-        {step === "phone" ? (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-warm shadow-warm">
-              <Phone className="h-8 w-8 text-primary-foreground" />
-            </div>
-            <h2 className="mt-6 font-display text-3xl font-black text-balance">
-              {t("phoneTitle")}
-            </h2>
-            <p className="mt-1 text-muted-foreground">{t("phoneHelp")}</p>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-warm shadow-warm">
+            <Mail className="h-8 w-8 text-primary-foreground" />
+          </div>
+          <h2 className="mt-6 font-display text-3xl font-black text-balance">
+            {t("emailTitle")}
+          </h2>
+          <p className="mt-1 text-muted-foreground">{t("emailHelp")}</p>
 
-            <div className="mt-8 rounded-3xl border-2 border-border bg-card p-2 focus-within:border-primary">
-              <div className="flex items-center gap-2 px-3 py-2">
-                <span className="rounded-xl bg-muted px-3 py-2 font-bold">+91</span>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  maxLength={10}
-                  placeholder={t("phonePlaceholder")}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  className="w-full bg-transparent py-2 text-xl font-bold tracking-wider outline-none placeholder:font-normal placeholder:text-muted-foreground/70"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={sendOtp}
-              disabled={phone.length !== 10}
-              className="mt-8 w-full rounded-2xl bg-gradient-warm px-6 py-4 text-lg font-bold text-primary-foreground shadow-warm transition-transform active:scale-[0.98] disabled:opacity-40"
-            >
-              {t("sendOtp")} →
-            </button>
-
-            <p className="mt-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Shield className="h-3.5 w-3.5" />
-              Your number stays private. Connect Lovable Cloud to enable real OTP.
-            </p>
-          </motion.div>
-        ) : (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-            <h2 className="font-display text-3xl font-black">{t("otpTitle")}</h2>
-            <p className="mt-1 text-muted-foreground">+91 {phone}</p>
-
-            <div className="mt-8 rounded-3xl border-2 border-border bg-card p-3 focus-within:border-primary">
+          <form onSubmit={submit} className="mt-8 space-y-3">
+            <div className="rounded-3xl border-2 border-border bg-card p-2 focus-within:border-primary">
               <input
-                type="tel"
-                inputMode="numeric"
-                maxLength={6}
-                placeholder="••••••"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="w-full bg-transparent px-3 py-3 text-center font-display text-3xl font-black tracking-[0.6em] outline-none"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder={t("emailPlaceholder")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-transparent px-4 py-3 text-lg outline-none placeholder:text-muted-foreground/70"
+              />
+            </div>
+            <div className="rounded-3xl border-2 border-border bg-card p-2 focus-within:border-primary">
+              <input
+                type="password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                required
+                minLength={6}
+                placeholder={t("passwordPlaceholder")}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-transparent px-4 py-3 text-lg outline-none placeholder:text-muted-foreground/70"
               />
             </div>
 
-            <p className="mt-3 text-xs text-muted-foreground">
-              Demo mode: enter any 6 digits to continue.
-            </p>
+            {error && (
+              <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {error}
+              </p>
+            )}
 
             <button
-              onClick={verify}
-              disabled={otp.length !== 6}
-              className="mt-8 w-full rounded-2xl bg-gradient-warm px-6 py-4 text-lg font-bold text-primary-foreground shadow-warm active:scale-[0.98] disabled:opacity-40"
+              type="submit"
+              disabled={submitting}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-warm px-6 py-4 text-lg font-bold text-primary-foreground shadow-warm transition-transform active:scale-[0.98] disabled:opacity-60"
             >
-              {t("verify")} →
+              {submitting && <Loader2 className="h-5 w-5 animate-spin" />}
+              {mode === "signup" ? t("signUp") : t("signIn")} →
             </button>
-          </motion.div>
-        )}
+          </form>
+
+          <button
+            onClick={() => {
+              setMode(mode === "signup" ? "signin" : "signup");
+              setError(null);
+            }}
+            className="mt-6 w-full text-center text-sm font-semibold text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            {mode === "signup" ? t("haveAccount") : t("needAccount")}
+          </button>
+        </motion.div>
       </main>
     </div>
   );
