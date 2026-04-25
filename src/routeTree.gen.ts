@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ShopkeeperRouteImport } from './routes/shopkeeper'
 import { Route as RoleRouteImport } from './routes/role'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LanguageRouteImport } from './routes/language'
 import { Route as IndexRouteImport } from './routes/index'
 
+const ShopkeeperRoute = ShopkeeperRouteImport.update({
+  id: '/shopkeeper',
+  path: '/shopkeeper',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoleRoute = RoleRouteImport.update({
   id: '/role',
   path: '/role',
@@ -40,12 +46,14 @@ export interface FileRoutesByFullPath {
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/role': typeof RoleRoute
+  '/shopkeeper': typeof ShopkeeperRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/role': typeof RoleRoute
+  '/shopkeeper': typeof ShopkeeperRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/role': typeof RoleRoute
+  '/shopkeeper': typeof ShopkeeperRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/language' | '/login' | '/role'
+  fullPaths: '/' | '/language' | '/login' | '/role' | '/shopkeeper'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/language' | '/login' | '/role'
-  id: '__root__' | '/' | '/language' | '/login' | '/role'
+  to: '/' | '/language' | '/login' | '/role' | '/shopkeeper'
+  id: '__root__' | '/' | '/language' | '/login' | '/role' | '/shopkeeper'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,10 +76,18 @@ export interface RootRouteChildren {
   LanguageRoute: typeof LanguageRoute
   LoginRoute: typeof LoginRoute
   RoleRoute: typeof RoleRoute
+  ShopkeeperRoute: typeof ShopkeeperRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/shopkeeper': {
+      id: '/shopkeeper'
+      path: '/shopkeeper'
+      fullPath: '/shopkeeper'
+      preLoaderRoute: typeof ShopkeeperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/role': {
       id: '/role'
       path: '/role'
@@ -107,7 +124,17 @@ const rootRouteChildren: RootRouteChildren = {
   LanguageRoute: LanguageRoute,
   LoginRoute: LoginRoute,
   RoleRoute: RoleRoute,
+  ShopkeeperRoute: ShopkeeperRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
