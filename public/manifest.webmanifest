@@ -1,0 +1,19 @@
+{
+  "name": "VillageFinder — Discover Local Shops",
+  "short_name": "VillageFinder",
+  "description": "Find shops, prices and stock in your village. Order on WhatsApp.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbf6ec",
+  "theme_color": "#c8602b",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
