@@ -85,6 +85,35 @@ export type Database = {
         }
         Relationships: []
       }
+      shop_contacts: {
+        Row: {
+          created_at: string
+          shop_id: string
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          created_at?: string
+          shop_id: string
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          created_at?: string
+          shop_id?: string
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_contacts_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: true
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           category: string
@@ -96,7 +125,6 @@ export type Database = {
           owner_id: string
           updated_at: string
           village: string
-          whatsapp: string
         }
         Insert: {
           category: string
@@ -108,7 +136,6 @@ export type Database = {
           owner_id: string
           updated_at?: string
           village: string
-          whatsapp: string
         }
         Update: {
           category?: string
@@ -120,7 +147,6 @@ export type Database = {
           owner_id?: string
           updated_at?: string
           village?: string
-          whatsapp?: string
         }
         Relationships: []
       }
