@@ -2,12 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
-import { Search, Loader2, Mic, Square, MapPin } from "lucide-react";
+import { Search, Loader2, Mic, Square, MapPin, Sparkles } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { ShopCard } from "@/components/ShopCard";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { showFriendlyError } from "@/lib/friendlyError";
+import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
 
@@ -90,17 +92,21 @@ function CustomerPage() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data, error } = await supabase
-        .from("shops")
-        .select(
-          "id, name, category, village, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
-        )
-        .order("updated_at", { ascending: false });
-      if (!mounted) return;
-      if (!error && data) {
+      try {
+        const { data, error } = await supabase
+          .from("shops")
+          .select(
+            "id, name, category, village, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
+          )
+          .order("updated_at", { ascending: false });
+        if (!mounted) return;
+        if (error) throw error;
         setShops((data as unknown as DbShop[]).map(toShopCardData));
+      } catch (e) {
+        showFriendlyError(e, "Couldn't load nearby shops. Pull to refresh.");
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
     })();
     return () => {
       mounted = false;
