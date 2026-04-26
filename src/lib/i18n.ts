@@ -47,6 +47,12 @@ const dict = {
     saveShop: "Save shop",
     nearbyShops: "Nearby shops",
     loading: "Loading…",
+    voiceSearch: "Tap mic and speak",
+    enableLocation: "Enable location",
+    sortNearest: "Nearest first",
+    sortRecent: "Recently updated",
+    showContact: "Show contact",
+    contactHidden: "Contact hidden — tap to reveal",
   },
   hi: {
     appName: "विलेजफाइंडर",
@@ -87,6 +93,12 @@ const dict = {
     saveShop: "दुकान सेव करें",
     nearbyShops: "पास की दुकानें",
     loading: "लोड हो रहा है…",
+    voiceSearch: "माइक दबाकर बोलें",
+    enableLocation: "लोकेशन चालू करें",
+    sortNearest: "नज़दीकी पहले",
+    sortRecent: "हाल में अपडेट",
+    showContact: "संपर्क दिखाएँ",
+    contactHidden: "संपर्क छुपा है — दिखाने के लिए दबाएँ",
   },
   te: {
     appName: "విలేజ్‌ఫైండర్",
@@ -127,6 +139,12 @@ const dict = {
     saveShop: "దుకాణం సేవ్ చేయి",
     nearbyShops: "దగ్గరి దుకాణాలు",
     loading: "లోడ్ అవుతోంది…",
+    voiceSearch: "మైక్ నొక్కి మాట్లాడండి",
+    enableLocation: "లొకేషన్ ఆన్ చేయండి",
+    sortNearest: "దగ్గరివి ముందు",
+    sortRecent: "ఇటీవల నవీకరించినవి",
+    showContact: "సంప్రదించండి",
+    contactHidden: "సంప్రదింపు దాగి ఉంది — చూపించడానికి నొక్కండి",
   },
 } as const;
 
