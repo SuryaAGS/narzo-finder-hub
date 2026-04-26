@@ -253,6 +253,19 @@ function CustomerPage() {
 
   useEffect(() => () => recRef.current?.stop(), []);
 
+  // Render nothing until auth is resolved — prevents flash of unauthorized UI
+  // and protects against role-restricted page shells leaking to wrong roles.
+  if (authLoading || !user || role !== "customer") {
+    return (
+      <div className="min-h-screen">
+        <AppHeader title={t("appName")} />
+        <div className="flex items-center justify-center pt-20 text-muted-foreground">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("loading")}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-10">
       <AppHeader title={t("appName")} showLogout />
@@ -294,6 +307,34 @@ function CustomerPage() {
 
         {voiceError && (
           <p className="mt-2 text-xs text-destructive">{voiceError}</p>
+        )}
+
+        {/* AI need-to-item suggestions */}
+        {query.trim().length >= 3 && (aiLoading || aiSuggestions.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3"
+          >
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              {aiLoading ? "Thinking…" : "Try these"}
+            </div>
+            {aiSuggestions.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {aiSuggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setQuery(s)}
+                    className="rounded-full bg-card px-3 py-1.5 text-sm font-semibold shadow-soft transition-transform active:scale-95"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
         )}
 
         {/* Location + sort row */}
