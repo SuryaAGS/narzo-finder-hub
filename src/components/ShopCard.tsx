@@ -13,6 +13,7 @@ import type { Shop, InventoryItem } from "@/lib/mockData";
 import { timeAgo } from "@/lib/mockData";
 import { t } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyError } from "@/lib/friendlyError";
 
 type Props = {
   shop: Shop;
@@ -38,15 +39,21 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
     if (whatsapp || revealing) return;
     setRevealing(true);
     setRevealError(null);
-    const { data, error } = await supabase.rpc("get_shop_whatsapp", {
-      _shop_id: shop.id,
-    });
-    setRevealing(false);
-    if (error || !data) {
-      setRevealError("Sign in to contact this shop");
-      return;
+    try {
+      const { data, error } = await supabase.rpc("get_shop_whatsapp", {
+        _shop_id: shop.id,
+      });
+      if (error) throw error;
+      if (!data) {
+        setRevealError("Sign in to contact this shop");
+        return;
+      }
+      setWhatsapp(data as string);
+    } catch (e) {
+      setRevealError(friendlyError(e, "Couldn't reveal the contact. Please try again."));
+    } finally {
+      setRevealing(false);
     }
-    setWhatsapp(data as string);
   };
 
   const buildWaUrl = (number: string) => {
