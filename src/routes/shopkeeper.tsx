@@ -342,23 +342,45 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
     if (!user) return;
     setSaving(true);
     setError(null);
-    const { data, error: insErr } = await supabase
-      .from("shops")
-      .insert({
-        owner_id: user.id,
-        name: name.trim(),
-        category,
-        village: village.trim(),
-        whatsapp: `91${whatsapp.replace(/\D/g, "")}`,
-      })
-      .select("id, name, category, village, whatsapp")
-      .single();
-    setSaving(false);
-    if (insErr) {
-      setError(insErr.message);
+
+    // Best-effort geolocation capture so customers can find this shop by distance.
+    const coords = await new Promise<{ lat: number; lng: number } | null>((resolve) => {
+      if (typeof navigator === "undefined" || !navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve(null),
+        { enableHighAccuracy: false, timeout: 6000, maximumAge: 5 * 60 * 1000 },
+      );
+    });
+
+    const fullWa = `91${whatsapp.replace(/\D/g, "")}`;
+    const { data: shopId, error: rpcErr } = await supabase.rpc("become_shopkeeper", {
+      _name: name.trim(),
+      _category: category,
+      _village: village.trim(),
+      _whatsapp: fullWa,
+      _latitude: coords?.lat ?? undefined,
+      _longitude: coords?.lng ?? undefined,
+    });
+
+    if (rpcErr || !shopId) {
+      setError("Could not create your shop. Please try again.");
+      setSaving(false);
       return;
     }
-    if (data) onCreated(data as DbShop);
+
+    // Refetch the row so we have the canonical shape.
+    const { data: row } = await supabase
+      .from("shops")
+      .select("id, name, category, village, whatsapp")
+      .eq("id", shopId as string)
+      .maybeSingle();
+    setSaving(false);
+    if (row) {
+      onCreated(row as DbShop);
+      // Force the auth hook to pick up the new shopkeeper role.
+      await supabase.auth.refreshSession();
+    }
   };
 
   return (
