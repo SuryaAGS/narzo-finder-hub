@@ -58,9 +58,10 @@ function ShopkeeperPage() {
     else if (role === "customer") navigate({ to: "/customer" });
   }, [authLoading, user, role, navigate]);
 
-  // Load shop + inventory
+  // Load shop + inventory (run for shopkeepers AND not-yet-assigned users
+  // so the ShopSetup form appears for new merchants).
   useEffect(() => {
-    if (!user || role !== "shopkeeper") return;
+    if (!user || role === "customer") return;
     let mounted = true;
     (async () => {
       const { data: shops } = await supabase
