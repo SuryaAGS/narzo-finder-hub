@@ -50,12 +50,12 @@ function ShopkeeperPage() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
 
-  // Auth gate
+  // Auth gate: signed-in users only. A null role is fine here — they may be
+  // about to become a shopkeeper via the ShopSetup form (become_shopkeeper RPC).
   useEffect(() => {
     if (authLoading) return;
     if (!user) navigate({ to: "/login" });
     else if (role === "customer") navigate({ to: "/customer" });
-    else if (!role) navigate({ to: "/role" });
   }, [authLoading, user, role, navigate]);
 
   // Load shop + inventory
