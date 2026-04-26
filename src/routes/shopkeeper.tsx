@@ -65,7 +65,7 @@ function ShopkeeperPage() {
     (async () => {
       const { data: shops } = await supabase
         .from("shops")
-        .select("id, name, category, village, whatsapp")
+        .select("id, name, category, village")
         .eq("owner_id", user.id)
         .limit(1);
       if (!mounted) return;
