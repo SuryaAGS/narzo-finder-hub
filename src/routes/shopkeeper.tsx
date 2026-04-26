@@ -371,33 +371,38 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
       );
     });
 
-    const fullWa = `91${whatsapp.replace(/\D/g, "")}`;
-    const { data: shopId, error: rpcErr } = await supabase.rpc("become_shopkeeper", {
-      _name: name.trim(),
-      _category: category,
-      _village: village.trim(),
-      _whatsapp: fullWa,
-      _latitude: coords?.lat ?? undefined,
-      _longitude: coords?.lng ?? undefined,
-    });
+    try {
+      const fullWa = `91${whatsapp.replace(/\D/g, "")}`;
+      const { data: shopId, error: rpcErr } = await supabase.rpc("become_shopkeeper", {
+        _name: name.trim(),
+        _category: category,
+        _village: village.trim(),
+        _whatsapp: fullWa,
+        _latitude: coords?.lat ?? undefined,
+        _longitude: coords?.lng ?? undefined,
+      });
 
-    if (rpcErr || !shopId) {
-      setError("Could not create your shop. Please try again.");
+      if (rpcErr || !shopId) {
+        throw rpcErr ?? new Error("Could not create shop");
+      }
+
+      // Refetch the row so we have the canonical shape.
+      const { data: row, error: rowErr } = await supabase
+        .from("shops")
+        .select("id, name, category, village")
+        .eq("id", shopId as string)
+        .maybeSingle();
+      if (rowErr) throw rowErr;
+      if (row) {
+        toast.success("Shop created! Welcome aboard.");
+        onCreated(row as DbShop);
+        await supabase.auth.refreshSession();
+      }
+    } catch (e) {
+      const msg = showFriendlyError(e, "Couldn't create your shop. Please try again.");
+      setError(msg);
+    } finally {
       setSaving(false);
-      return;
-    }
-
-    // Refetch the row so we have the canonical shape.
-    const { data: row } = await supabase
-      .from("shops")
-      .select("id, name, category, village")
-      .eq("id", shopId as string)
-      .maybeSingle();
-    setSaving(false);
-    if (row) {
-      onCreated(row as DbShop);
-      // Force the auth hook to pick up the new shopkeeper role.
-      await supabase.auth.refreshSession();
     }
   };
 
