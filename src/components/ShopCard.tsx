@@ -1,22 +1,71 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Clock, MessageCircle, CheckCircle2, XCircle } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  MessageCircle,
+  CheckCircle2,
+  XCircle,
+  Eye,
+  Loader2,
+} from "lucide-react";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { timeAgo } from "@/lib/mockData";
 import { t } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 type Props = {
   shop: Shop;
   matchedItems: InventoryItem[];
   query?: string;
+  /** Optional distance in km computed from user geolocation. */
+  distanceKm?: number | null;
 };
 
-export function ShopCard({ shop, matchedItems, query }: Props) {
-  const waMessage = encodeURIComponent(
-    `Hi! I'm checking VillageFinder. Do you have ${
-      query || matchedItems[0]?.name || "this item"
-    } in stock at ${shop.name}? — Thank you!`,
-  );
-  const waUrl = `https://wa.me/${shop.whatsapp}?text=${waMessage}`;
+function maskNumber(num: string) {
+  if (!num) return "•••• •••• ••";
+  const digits = num.replace(/\D/g, "");
+  if (digits.length <= 4) return "•".repeat(digits.length);
+  return `${digits.slice(0, 2)} •••• ${digits.slice(-2)}`;
+}
+
+export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
+  const [whatsapp, setWhatsapp] = useState<string | null>(null);
+  const [revealing, setRevealing] = useState(false);
+  const [revealError, setRevealError] = useState<string | null>(null);
+
+  const reveal = async () => {
+    if (whatsapp || revealing) return;
+    setRevealing(true);
+    setRevealError(null);
+    const { data, error } = await supabase.rpc("get_shop_whatsapp", {
+      _shop_id: shop.id,
+    });
+    setRevealing(false);
+    if (error || !data) {
+      setRevealError("Sign in to contact this shop");
+      return;
+    }
+    setWhatsapp(data as string);
+  };
+
+  const buildWaUrl = (number: string) => {
+    const digits = number.replace(/\D/g, "");
+    const msg = encodeURIComponent(
+      `Hi! I'm checking VillageFinder. Do you have ${
+        query || matchedItems[0]?.name || "this item"
+      } in stock at ${shop.name}? — Thank you!`,
+    );
+    return `https://wa.me/${digits}?text=${msg}`;
+  };
+
+  const handleContactClick = async (e: React.MouseEvent) => {
+    if (whatsapp) return; // let the link follow
+    e.preventDefault();
+    await reveal();
+  };
+
+  const distance = distanceKm ?? (shop.distanceKm > 0 ? shop.distanceKm : null);
 
   return (
     <motion.article
@@ -32,10 +81,11 @@ export function ShopCard({ shop, matchedItems, query }: Props) {
             {shop.village ? ` · ${shop.village}` : ""}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            {shop.distanceKm > 0 && (
+            {distance !== null && (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
-                {shop.distanceKm} km {t("distanceAway")}
+                {distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`}{" "}
+                {t("distanceAway")}
               </span>
             )}
             <span className="inline-flex items-center gap-1">
@@ -75,11 +125,37 @@ export function ShopCard({ shop, matchedItems, query }: Props) {
         </ul>
       )}
 
+      {/* Masked phone preview */}
+      <div className="mt-4 flex items-center justify-between gap-2 rounded-2xl bg-muted/40 px-4 py-2 text-sm">
+        <span className="font-mono text-muted-foreground">
+          {whatsapp ? `+${whatsapp}` : `+${maskNumber(shop.whatsapp || "0000000000")}`}
+        </span>
+        {!whatsapp && (
+          <button
+            type="button"
+            onClick={reveal}
+            disabled={revealing}
+            className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+          >
+            {revealing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Eye className="h-3.5 w-3.5" />
+            )}
+            {t("showContact")}
+          </button>
+        )}
+      </div>
+      {revealError && (
+        <p className="mt-1 text-xs text-destructive">{revealError}</p>
+      )}
+
       <a
-        href={waUrl}
-        target="_blank"
+        href={whatsapp ? buildWaUrl(whatsapp) : "#"}
+        onClick={handleContactClick}
+        target={whatsapp ? "_blank" : undefined}
         rel="noopener noreferrer"
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-4 text-base font-bold text-secondary-foreground shadow-soft transition-transform active:scale-[0.98]"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-4 text-base font-bold text-secondary-foreground shadow-soft transition-transform active:scale-[0.98]"
       >
         <MessageCircle className="h-5 w-5" />
         {t("orderWhatsApp")}
