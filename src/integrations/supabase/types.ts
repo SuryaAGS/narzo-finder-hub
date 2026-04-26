@@ -150,6 +150,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      become_shopkeeper: {
+        Args: {
+          _category: string
+          _latitude?: number
+          _longitude?: number
+          _name: string
+          _village: string
+          _whatsapp: string
+        }
+        Returns: string
+      }
+      get_shop_whatsapp: { Args: { _shop_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
