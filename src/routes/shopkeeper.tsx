@@ -18,6 +18,8 @@ import { t } from "@/lib/i18n";
 import { parseVoiceCommand, type ParsedItem } from "@/lib/voiceParser";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { showFriendlyError } from "@/lib/friendlyError";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/shopkeeper")({
   component: ShopkeeperPage,
@@ -63,23 +65,30 @@ function ShopkeeperPage() {
     if (!user || role === "customer") return;
     let mounted = true;
     (async () => {
-      const { data: shops } = await supabase
-        .from("shops")
-        .select("id, name, category, village")
-        .eq("owner_id", user.id)
-        .limit(1);
-      if (!mounted) return;
-      const myShop = (shops?.[0] as DbShop | undefined) ?? null;
-      setShop(myShop);
-      if (myShop) {
-        const { data: inv } = await supabase
-          .from("inventory")
-          .select("id, name, aliases, price, unit, status, updated_at")
-          .eq("shop_id", myShop.id)
-          .order("updated_at", { ascending: false });
-        if (mounted) setItems((inv as unknown as DbItem[]) ?? []);
+      try {
+        const { data: shops, error: shopsErr } = await supabase
+          .from("shops")
+          .select("id, name, category, village")
+          .eq("owner_id", user.id)
+          .limit(1);
+        if (shopsErr) throw shopsErr;
+        if (!mounted) return;
+        const myShop = (shops?.[0] as DbShop | undefined) ?? null;
+        setShop(myShop);
+        if (myShop) {
+          const { data: inv, error: invErr } = await supabase
+            .from("inventory")
+            .select("id, name, aliases, price, unit, status, updated_at")
+            .eq("shop_id", myShop.id)
+            .order("updated_at", { ascending: false });
+          if (invErr) throw invErr;
+          if (mounted) setItems((inv as unknown as DbItem[]) ?? []);
+        }
+      } catch (e) {
+        showFriendlyError(e, "Couldn't load your shop. Please try again.");
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
     })();
     return () => {
       mounted = false;
@@ -100,36 +109,42 @@ function ShopkeeperPage() {
   ) => {
     if (!shop) return;
     const existing = findItem(name);
-    if (existing) {
-      const { data, error } = await supabase
-        .from("inventory")
-        .update({
-          ...(fields.price !== undefined ? { price: fields.price } : {}),
-          ...(fields.unit ? { unit: fields.unit } : {}),
-          ...(fields.status ? { status: fields.status } : {}),
-        })
-        .eq("id", existing.id)
-        .select("id, name, aliases, price, unit, status, updated_at")
-        .single();
-      if (!error && data) {
-        setItems((prev) => prev.map((i) => (i.id === existing.id ? (data as DbItem) : i)));
+    try {
+      if (existing) {
+        const { data, error } = await supabase
+          .from("inventory")
+          .update({
+            ...(fields.price !== undefined ? { price: fields.price } : {}),
+            ...(fields.unit ? { unit: fields.unit } : {}),
+            ...(fields.status ? { status: fields.status } : {}),
+          })
+          .eq("id", existing.id)
+          .select("id, name, aliases, price, unit, status, updated_at")
+          .single();
+        if (error) throw error;
+        if (data) {
+          setItems((prev) => prev.map((i) => (i.id === existing.id ? (data as DbItem) : i)));
+        }
+      } else {
+        const { data, error } = await supabase
+          .from("inventory")
+          .insert({
+            shop_id: shop.id,
+            name,
+            aliases: [name.toLowerCase()],
+            price: fields.price ?? 0,
+            unit: fields.unit ?? "pc",
+            status: fields.status ?? "in",
+          })
+          .select("id, name, aliases, price, unit, status, updated_at")
+          .single();
+        if (error) throw error;
+        if (data) {
+          setItems((prev) => [data as DbItem, ...prev]);
+        }
       }
-    } else {
-      const { data, error } = await supabase
-        .from("inventory")
-        .insert({
-          shop_id: shop.id,
-          name,
-          aliases: [name.toLowerCase()],
-          price: fields.price ?? 0,
-          unit: fields.unit ?? "pc",
-          status: fields.status ?? "in",
-        })
-        .select("id, name, aliases, price, unit, status, updated_at")
-        .single();
-      if (!error && data) {
-        setItems((prev) => [data as DbItem, ...prev]);
-      }
+    } catch (e) {
+      showFriendlyError(e, "Couldn't save that item. Please try again.");
     }
   };
 
@@ -149,7 +164,11 @@ function ShopkeeperPage() {
       .eq("id", id)
       .select("id, name, aliases, price, unit, status, updated_at")
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          showFriendlyError(error, "Couldn't update price.");
+          return;
+        }
         if (data) setItems((prev) => prev.map((i) => (i.id === id ? (data as DbItem) : i)));
       });
   };
