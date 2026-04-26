@@ -158,6 +158,45 @@ function CustomerPage() {
     }));
   }, [query, fuse, shops, geo.coords]);
 
+  // AI need-mapper: when fuzzy search returns nothing, ask Lovable AI to map
+  // the user's "need" (e.g. "fever", "biryani") to inventory items.
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const allItemNames = useMemo(
+    () => Array.from(new Set(indexed.map((r) => r.item.name))).slice(0, 500),
+    [indexed],
+  );
+
+  useEffect(() => {
+    const q = query.trim();
+    setAiSuggestions([]);
+    if (!q || q.length < 3) return;
+    // Only ask AI when fuzzy search returned 0 matches.
+    const fuzzyHits = fuse.search(q).length;
+    if (fuzzyHits > 0) return;
+    if (allItemNames.length === 0) return;
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      setAiLoading(true);
+      try {
+        const res = await aiSuggestItems({
+          data: { query: q, itemNames: allItemNames },
+          signal: ctrl.signal,
+        });
+        if (!ctrl.signal.aborted) setAiSuggestions(res.suggestions ?? []);
+      } catch {
+        /* silent — AI is a nice-to-have */
+      } finally {
+        if (!ctrl.signal.aborted) setAiLoading(false);
+      }
+    }, 500);
+    return () => {
+      ctrl.abort();
+      clearTimeout(timer);
+    };
+  }, [query, fuse, allItemNames]);
+
   const sorted = useMemo(() => {
     const arr = [...withDistance];
     if (sortMode === "nearest" && geo.coords) {
