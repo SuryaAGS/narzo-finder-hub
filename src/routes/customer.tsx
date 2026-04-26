@@ -2,12 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
-import { Search, Loader2, Mic, Square, MapPin } from "lucide-react";
+import { Search, Loader2, Mic, Square, MapPin, Sparkles } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { ShopCard } from "@/components/ShopCard";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { showFriendlyError } from "@/lib/friendlyError";
+import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
 
@@ -90,17 +92,21 @@ function CustomerPage() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data, error } = await supabase
-        .from("shops")
-        .select(
-          "id, name, category, village, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
-        )
-        .order("updated_at", { ascending: false });
-      if (!mounted) return;
-      if (!error && data) {
+      try {
+        const { data, error } = await supabase
+          .from("shops")
+          .select(
+            "id, name, category, village, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
+          )
+          .order("updated_at", { ascending: false });
+        if (!mounted) return;
+        if (error) throw error;
         setShops((data as unknown as DbShop[]).map(toShopCardData));
+      } catch (e) {
+        showFriendlyError(e, "Couldn't load nearby shops. Pull to refresh.");
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
     })();
     return () => {
       mounted = false;
@@ -151,6 +157,45 @@ function CustomerPage() {
       distance: geo.coords && s.coords ? distanceKm(geo.coords, s.coords) : null,
     }));
   }, [query, fuse, shops, geo.coords]);
+
+  // AI need-mapper: when fuzzy search returns nothing, ask Lovable AI to map
+  // the user's "need" (e.g. "fever", "biryani") to inventory items.
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const allItemNames = useMemo(
+    () => Array.from(new Set(indexed.map((r) => r.item.name))).slice(0, 500),
+    [indexed],
+  );
+
+  useEffect(() => {
+    const q = query.trim();
+    setAiSuggestions([]);
+    if (!q || q.length < 3) return;
+    // Only ask AI when fuzzy search returned 0 matches.
+    const fuzzyHits = fuse.search(q).length;
+    if (fuzzyHits > 0) return;
+    if (allItemNames.length === 0) return;
+
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      setAiLoading(true);
+      try {
+        const res = await aiSuggestItems({
+          data: { query: q, itemNames: allItemNames },
+          signal: ctrl.signal,
+        });
+        if (!ctrl.signal.aborted) setAiSuggestions(res.suggestions ?? []);
+      } catch {
+        /* silent — AI is a nice-to-have */
+      } finally {
+        if (!ctrl.signal.aborted) setAiLoading(false);
+      }
+    }, 500);
+    return () => {
+      ctrl.abort();
+      clearTimeout(timer);
+    };
+  }, [query, fuse, allItemNames]);
 
   const sorted = useMemo(() => {
     const arr = [...withDistance];
@@ -208,6 +253,19 @@ function CustomerPage() {
 
   useEffect(() => () => recRef.current?.stop(), []);
 
+  // Render nothing until auth is resolved — prevents flash of unauthorized UI
+  // and protects against role-restricted page shells leaking to wrong roles.
+  if (authLoading || !user || role !== "customer") {
+    return (
+      <div className="min-h-screen">
+        <AppHeader title={t("appName")} />
+        <div className="flex items-center justify-center pt-20 text-muted-foreground">
+          <Loader2 className="mr-2 h-5 w-5 animate-spin" /> {t("loading")}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen pb-10">
       <AppHeader title={t("appName")} showLogout />
@@ -249,6 +307,34 @@ function CustomerPage() {
 
         {voiceError && (
           <p className="mt-2 text-xs text-destructive">{voiceError}</p>
+        )}
+
+        {/* AI need-to-item suggestions */}
+        {query.trim().length >= 3 && (aiLoading || aiSuggestions.length > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-3 rounded-2xl border border-primary/30 bg-primary/5 px-4 py-3"
+          >
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+              {aiLoading ? "Thinking…" : "Try these"}
+            </div>
+            {aiSuggestions.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {aiSuggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setQuery(s)}
+                    className="rounded-full bg-card px-3 py-1.5 text-sm font-semibold shadow-soft transition-transform active:scale-95"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
         )}
 
         {/* Location + sort row */}
