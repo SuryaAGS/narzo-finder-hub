@@ -32,15 +32,23 @@ function RolePage() {
     if (!user) return;
     setSaving(chosen);
     setError(null);
+
+    if (chosen === "shopkeeper") {
+      // Shopkeeper role is granted server-side via become_shopkeeper() once the shop is created.
+      // Route them to the setup form which performs that secure call.
+      navigate({ to: "/merchant" });
+      return;
+    }
+
     const { error: insErr } = await supabase
       .from("user_roles")
       .insert({ user_id: user.id, role: chosen });
-    if (insErr && !insErr.message.includes("duplicate")) {
-      setError(insErr.message);
+    if (insErr && insErr.code !== "23505") {
+      setError("Could not save your choice. Please try again.");
       setSaving(null);
       return;
     }
-    navigate({ to: chosen === "customer" ? "/customer" : "/merchant" });
+    navigate({ to: "/customer" });
   };
 
   return (
