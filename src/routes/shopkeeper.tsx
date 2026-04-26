@@ -38,7 +38,6 @@ type DbShop = {
   name: string;
   category: string;
   village: string;
-  whatsapp: string;
 };
 
 function ShopkeeperPage() {
