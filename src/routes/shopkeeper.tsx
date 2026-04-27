@@ -351,6 +351,7 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [village, setVillage] = useState("");
+  const [landmark, setLandmark] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -384,6 +385,14 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
 
       if (rpcErr || !shopId) {
         throw rpcErr ?? new Error("Could not create shop");
+      }
+
+      // Save the optional landmark (RPC doesn't accept it).
+      if (landmark.trim()) {
+        await supabase
+          .from("shops")
+          .update({ landmark: landmark.trim() })
+          .eq("id", shopId as string);
       }
 
       // Refetch the row so we have the canonical shape.
@@ -457,6 +466,15 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
               value={village}
               onChange={(e) => setVillage(e.target.value)}
               placeholder="Pothavaram"
+              className="w-full bg-transparent px-4 py-3 text-lg outline-none"
+            />
+          </Field>
+
+          <Field label={t("landmark")}>
+            <input
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
+              placeholder={t("landmarkPlaceholder")}
               className="w-full bg-transparent px-4 py-3 text-lg outline-none"
             />
           </Field>

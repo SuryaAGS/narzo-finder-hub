@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -11,6 +11,7 @@ import {
   Plus,
   Minus,
   Landmark as LandmarkIcon,
+  Star,
 } from "lucide-react";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { timeAgo } from "@/lib/mockData";
@@ -42,6 +43,25 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
   const cart = useCart();
   const cartLines = cart.linesForShop(shop.id);
   const cartCount = cart.countForShop(shop.id);
+  const [ratingAvg, setRatingAvg] = useState<number | null>(null);
+  const [ratingCount, setRatingCount] = useState<number>(0);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("shop_ratings")
+        .select("rating")
+        .eq("shop_id", shop.id);
+      if (!active || error || !data || data.length === 0) return;
+      const sum = data.reduce((s, r) => s + (r.rating ?? 0), 0);
+      setRatingAvg(sum / data.length);
+      setRatingCount(data.length);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [shop.id]);
 
   const reveal = async (): Promise<string | null> => {
     if (whatsapp) return whatsapp;
@@ -115,6 +135,13 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
             </p>
           )}
           <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            {ratingAvg !== null && (
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                {ratingAvg.toFixed(1)}
+                <span className="font-normal text-muted-foreground">({ratingCount})</span>
+              </span>
+            )}
             {distance !== null && (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
