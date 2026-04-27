@@ -43,6 +43,25 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
   const cart = useCart();
   const cartLines = cart.linesForShop(shop.id);
   const cartCount = cart.countForShop(shop.id);
+  const [ratingAvg, setRatingAvg] = useState<number | null>(null);
+  const [ratingCount, setRatingCount] = useState<number>(0);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("shop_ratings")
+        .select("rating")
+        .eq("shop_id", shop.id);
+      if (!active || error || !data || data.length === 0) return;
+      const sum = data.reduce((s, r) => s + (r.rating ?? 0), 0);
+      setRatingAvg(sum / data.length);
+      setRatingCount(data.length);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [shop.id]);
 
   const reveal = async (): Promise<string | null> => {
     if (whatsapp) return whatsapp;
