@@ -74,15 +74,16 @@ function toShopCardData(s: DbShop): {
 
 type SortMode = "nearest" | "recent";
 
+type ShopRow = { shop: Shop & { landmark: string | null }; items: InventoryItem[]; coords: Coords | null };
+
 function CustomerPage() {
   const navigate = useNavigate();
   const { user, role, loading: authLoading } = useAuth();
-  const [shops, setShops] = useState<
-    { shop: Shop; items: InventoryItem[]; coords: Coords | null }[]
-  >([]);
+  const [shops, setShops] = useState<ShopRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("recent");
+  const [selectedVillage, setSelectedVillage] = useState<string>("__all");
   const geo = useGeolocation(false);
 
   // Auth gate — only let signed-in customers in.
