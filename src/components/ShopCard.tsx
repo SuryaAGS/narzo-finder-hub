@@ -135,6 +135,13 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
             </p>
           )}
           <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            {ratingAvg !== null && (
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+                {ratingAvg.toFixed(1)}
+                <span className="font-normal text-muted-foreground">({ratingCount})</span>
+              </span>
+            )}
             {distance !== null && (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" />
