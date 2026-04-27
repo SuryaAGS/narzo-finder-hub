@@ -101,7 +101,7 @@ function CustomerPage() {
         const { data, error } = await supabase
           .from("shops")
           .select(
-            "id, name, category, village, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
+            "id, name, category, village, landmark, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
           )
           .order("updated_at", { ascending: false });
         if (!mounted) return;
