@@ -14,7 +14,9 @@ import { Route as RoleRouteImport } from './routes/role'
 import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LanguageRouteImport } from './routes/language'
+import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as CustomerRouteImport } from './routes/customer'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ShopkeeperRoute = ShopkeeperRouteImport.update({
@@ -42,9 +44,19 @@ const LanguageRoute = LanguageRouteImport.update({
   path: '/language',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FeedbackRoute = FeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CustomerRoute = CustomerRouteImport.update({
   id: '/customer',
   path: '/customer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -55,7 +67,9 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/customer': typeof CustomerRoute
+  '/feedback': typeof FeedbackRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRoute
@@ -64,7 +78,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/customer': typeof CustomerRoute
+  '/feedback': typeof FeedbackRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRoute
@@ -74,7 +90,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/customer': typeof CustomerRoute
+  '/feedback': typeof FeedbackRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRoute
@@ -85,7 +103,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/customer'
+    | '/feedback'
     | '/language'
     | '/login'
     | '/merchant'
@@ -94,7 +114,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/customer'
+    | '/feedback'
     | '/language'
     | '/login'
     | '/merchant'
@@ -103,7 +125,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/customer'
+    | '/feedback'
     | '/language'
     | '/login'
     | '/merchant'
@@ -113,7 +137,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   CustomerRoute: typeof CustomerRoute
+  FeedbackRoute: typeof FeedbackRoute
   LanguageRoute: typeof LanguageRoute
   LoginRoute: typeof LoginRoute
   MerchantRoute: typeof MerchantRoute
@@ -158,11 +184,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LanguageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/feedback': {
+      id: '/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof FeedbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/customer': {
       id: '/customer'
       path: '/customer'
       fullPath: '/customer'
       preLoaderRoute: typeof CustomerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -177,7 +217,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   CustomerRoute: CustomerRoute,
+  FeedbackRoute: FeedbackRoute,
   LanguageRoute: LanguageRoute,
   LoginRoute: LoginRoute,
   MerchantRoute: MerchantRoute,
