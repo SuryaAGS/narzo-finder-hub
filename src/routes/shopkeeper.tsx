@@ -470,6 +470,15 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
             />
           </Field>
 
+          <Field label={t("landmark")}>
+            <input
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
+              placeholder={t("landmarkPlaceholder")}
+              className="w-full bg-transparent px-4 py-3 text-lg outline-none"
+            />
+          </Field>
+
           <Field label={t("whatsappNumber")}>
             <div className="flex items-center gap-2 px-3">
               <span className="rounded-xl bg-muted px-3 py-2 font-bold">+91</span>
