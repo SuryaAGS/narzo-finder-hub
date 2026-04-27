@@ -396,6 +396,25 @@ function CustomerPage() {
           {geo.error && (
             <span className="text-xs text-muted-foreground">{geo.error}</span>
           )}
+
+          {villages.length > 0 && (
+            <label className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold shadow-soft">
+              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+              <select
+                value={selectedVillage}
+                onChange={(e) => setSelectedVillage(e.target.value)}
+                className="bg-transparent pr-1 outline-none"
+                aria-label={t("chooseArea")}
+              >
+                <option value="__all">{t("allAreas")}</option>
+                {villages.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
         </div>
 
         <h2 className="mt-6 font-display text-xl font-bold">
