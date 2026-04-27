@@ -351,6 +351,7 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [village, setVillage] = useState("");
+  const [landmark, setLandmark] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
