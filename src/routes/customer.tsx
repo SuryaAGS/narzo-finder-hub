@@ -140,28 +140,36 @@ function CustomerPage() {
     [indexed],
   );
 
+  const villages = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of shops) if (s.shop.village) set.add(s.shop.village);
+    return Array.from(set).sort();
+  }, [shops]);
+
   const withDistance = useMemo(() => {
+    const base = selectedVillage === "__all"
+      ? shops
+      : shops.filter((s) => s.shop.village === selectedVillage);
     const list = query.trim()
       ? (() => {
           const matches = fuse.search(query.trim()).map((r) => r.item);
-          const byShop = new Map<
-            string,
-            { shop: Shop; items: InventoryItem[]; coords: Coords | null }
-          >();
+          const allowedShopIds = new Set(base.map((s) => s.shop.id));
+          const byShop = new Map<string, ShopRow>();
           for (const m of matches) {
+            if (!allowedShopIds.has(m.shop.id)) continue;
             const cur = byShop.get(m.shop.id);
             if (cur) cur.items.push(m.item);
-            else byShop.set(m.shop.id, { shop: m.shop, items: [m.item], coords: m.coords });
+            else byShop.set(m.shop.id, { shop: m.shop as ShopRow["shop"], items: [m.item], coords: m.coords });
           }
           return Array.from(byShop.values());
         })()
-      : shops;
+      : base;
 
     return list.map((s) => ({
       ...s,
       distance: geo.coords && s.coords ? distanceKm(geo.coords, s.coords) : null,
     }));
-  }, [query, fuse, shops, geo.coords]);
+  }, [query, fuse, shops, geo.coords, selectedVillage]);
 
   // AI need-mapper: when fuzzy search returns nothing, ask Lovable AI to map
   // the user's "need" (e.g. "fever", "biryani") to inventory items.
@@ -233,7 +241,7 @@ function CustomerPage() {
     }
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const rec: any = new (SR as any)();
-    rec.lang = "en-IN";
+    rec.lang = speechLangCode(getLang());
     rec.interimResults = true;
     rec.continuous = false;
     rec.onresult = (e: any) => {
