@@ -12,6 +12,8 @@ import { showFriendlyError } from "@/lib/friendlyError";
 import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
+import { speechLangCode } from "@/lib/inventoryI18n";
+import { getLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/customer")({
   component: CustomerPage,
@@ -22,6 +24,7 @@ type DbShop = {
   name: string;
   category: string;
   village: string;
+  landmark: string | null;
   latitude: number | null;
   longitude: number | null;
   updated_at: string;
@@ -37,7 +40,7 @@ type DbShop = {
 };
 
 function toShopCardData(s: DbShop): {
-  shop: Shop;
+  shop: Shop & { landmark: string | null };
   items: InventoryItem[];
   coords: Coords | null;
 } {
@@ -50,14 +53,15 @@ function toShopCardData(s: DbShop): {
     status: i.status,
     updatedAt: new Date(i.updated_at).getTime(),
   }));
-  const shop: Shop = {
+  const shop: Shop & { landmark: string | null } = {
     id: s.id,
     name: s.name,
     owner: "",
     category: s.category,
     village: s.village,
+    landmark: s.landmark,
     distanceKm: 0,
-    whatsapp: "", // hidden — fetched on demand via RPC
+    whatsapp: "",
     updatedAt: new Date(s.updated_at).getTime(),
     items,
   };
