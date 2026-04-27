@@ -387,6 +387,14 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
         throw rpcErr ?? new Error("Could not create shop");
       }
 
+      // Save the optional landmark (RPC doesn't accept it).
+      if (landmark.trim()) {
+        await supabase
+          .from("shops")
+          .update({ landmark: landmark.trim() })
+          .eq("id", shopId as string);
+      }
+
       // Refetch the row so we have the canonical shape.
       const { data: row, error: rowErr } = await supabase
         .from("shops")
