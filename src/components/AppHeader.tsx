@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Globe, LogOut } from "lucide-react";
+import { ArrowLeft, Globe, LogOut, Star, ShieldCheck } from "lucide-react";
 import { PHONE_KEY, ROLE_KEY, t } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 type Props = {
   back?: string;
@@ -11,9 +12,9 @@ type Props = {
 
 export function AppHeader({ back, title, showLogout }: Props) {
   const navigate = useNavigate();
+  const { isAdmin, user } = useAuth();
   const logout = async () => {
     await supabase.auth.signOut();
-    // Clear any leftover demo keys
     localStorage.removeItem(PHONE_KEY);
     localStorage.removeItem(ROLE_KEY);
     navigate({ to: "/" });
@@ -40,6 +41,24 @@ export function AppHeader({ back, title, showLogout }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted"
+              aria-label={t("admin")}
+            >
+              <ShieldCheck className="h-5 w-5 text-secondary" />
+            </Link>
+          )}
+          {user && (
+            <Link
+              to="/feedback"
+              className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted"
+              aria-label={t("feedback")}
+            >
+              <Star className="h-5 w-5" />
+            </Link>
+          )}
           <Link
             to="/language"
             className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted"

@@ -210,4 +210,23 @@
   .text-balance {
     text-wrap: balance;
   }
+  /* Official WhatsApp brand green */
+  .bg-whatsapp {
+    background-color: #25d366;
+    color: #ffffff;
+  }
+  .bg-whatsapp:hover {
+    background-color: #1ebe5d;
+  }
+  .text-whatsapp {
+    color: #25d366;
+  }
 }
+
+/* Hide the injected "Edit with Lovable" badge on published deployments. */
+#lovable-badge,
+[data-lovable-badge],
+a[href*="lovable.dev"][target="_blank"] {
+  display: none !important;
+}
+

@@ -12,6 +12,8 @@ import { showFriendlyError } from "@/lib/friendlyError";
 import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
+import { speechLangCode } from "@/lib/inventoryI18n";
+import { getLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/customer")({
   component: CustomerPage,
@@ -22,6 +24,7 @@ type DbShop = {
   name: string;
   category: string;
   village: string;
+  landmark: string | null;
   latitude: number | null;
   longitude: number | null;
   updated_at: string;
@@ -37,7 +40,7 @@ type DbShop = {
 };
 
 function toShopCardData(s: DbShop): {
-  shop: Shop;
+  shop: Shop & { landmark: string | null };
   items: InventoryItem[];
   coords: Coords | null;
 } {
@@ -50,14 +53,15 @@ function toShopCardData(s: DbShop): {
     status: i.status,
     updatedAt: new Date(i.updated_at).getTime(),
   }));
-  const shop: Shop = {
+  const shop: Shop & { landmark: string | null } = {
     id: s.id,
     name: s.name,
     owner: "",
     category: s.category,
     village: s.village,
+    landmark: s.landmark,
     distanceKm: 0,
-    whatsapp: "", // hidden — fetched on demand via RPC
+    whatsapp: "",
     updatedAt: new Date(s.updated_at).getTime(),
     items,
   };
@@ -70,15 +74,16 @@ function toShopCardData(s: DbShop): {
 
 type SortMode = "nearest" | "recent";
 
+type ShopRow = { shop: Shop & { landmark: string | null }; items: InventoryItem[]; coords: Coords | null };
+
 function CustomerPage() {
   const navigate = useNavigate();
   const { user, role, loading: authLoading } = useAuth();
-  const [shops, setShops] = useState<
-    { shop: Shop; items: InventoryItem[]; coords: Coords | null }[]
-  >([]);
+  const [shops, setShops] = useState<ShopRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("recent");
+  const [selectedVillage, setSelectedVillage] = useState<string>("__all");
   const geo = useGeolocation(false);
 
   // Auth gate — only let signed-in customers in.
@@ -96,7 +101,7 @@ function CustomerPage() {
         const { data, error } = await supabase
           .from("shops")
           .select(
-            "id, name, category, village, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
+            "id, name, category, village, landmark, latitude, longitude, updated_at, inventory(id, name, aliases, price, unit, status, updated_at)",
           )
           .order("updated_at", { ascending: false });
         if (!mounted) return;
@@ -135,28 +140,36 @@ function CustomerPage() {
     [indexed],
   );
 
+  const villages = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of shops) if (s.shop.village) set.add(s.shop.village);
+    return Array.from(set).sort();
+  }, [shops]);
+
   const withDistance = useMemo(() => {
+    const base = selectedVillage === "__all"
+      ? shops
+      : shops.filter((s) => s.shop.village === selectedVillage);
     const list = query.trim()
       ? (() => {
           const matches = fuse.search(query.trim()).map((r) => r.item);
-          const byShop = new Map<
-            string,
-            { shop: Shop; items: InventoryItem[]; coords: Coords | null }
-          >();
+          const allowedShopIds = new Set(base.map((s) => s.shop.id));
+          const byShop = new Map<string, ShopRow>();
           for (const m of matches) {
+            if (!allowedShopIds.has(m.shop.id)) continue;
             const cur = byShop.get(m.shop.id);
             if (cur) cur.items.push(m.item);
-            else byShop.set(m.shop.id, { shop: m.shop, items: [m.item], coords: m.coords });
+            else byShop.set(m.shop.id, { shop: m.shop as ShopRow["shop"], items: [m.item], coords: m.coords });
           }
           return Array.from(byShop.values());
         })()
-      : shops;
+      : base;
 
     return list.map((s) => ({
       ...s,
       distance: geo.coords && s.coords ? distanceKm(geo.coords, s.coords) : null,
     }));
-  }, [query, fuse, shops, geo.coords]);
+  }, [query, fuse, shops, geo.coords, selectedVillage]);
 
   // AI need-mapper: when fuzzy search returns nothing, ask Lovable AI to map
   // the user's "need" (e.g. "fever", "biryani") to inventory items.
@@ -228,7 +241,7 @@ function CustomerPage() {
     }
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const rec: any = new (SR as any)();
-    rec.lang = "en-IN";
+    rec.lang = speechLangCode(getLang());
     rec.interimResults = true;
     rec.continuous = false;
     rec.onresult = (e: any) => {

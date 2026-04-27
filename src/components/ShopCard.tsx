@@ -8,18 +8,22 @@ import {
   XCircle,
   Eye,
   Loader2,
+  Plus,
+  Minus,
+  Landmark as LandmarkIcon,
 } from "lucide-react";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { timeAgo } from "@/lib/mockData";
-import { t } from "@/lib/i18n";
+import { t, getLang } from "@/lib/i18n";
+import { localizeItem } from "@/lib/inventoryI18n";
 import { supabase } from "@/integrations/supabase/client";
 import { friendlyError } from "@/lib/friendlyError";
+import { useCart } from "@/hooks/useCart";
 
 type Props = {
-  shop: Shop;
+  shop: Shop & { landmark?: string | null };
   matchedItems: InventoryItem[];
   query?: string;
-  /** Optional distance in km computed from user geolocation. */
   distanceKm?: number | null;
 };
 
@@ -31,12 +35,16 @@ function maskNumber(num: string) {
 }
 
 export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
+  const lang = getLang();
   const [whatsapp, setWhatsapp] = useState<string | null>(null);
   const [revealing, setRevealing] = useState(false);
   const [revealError, setRevealError] = useState<string | null>(null);
+  const cart = useCart();
+  const cartLines = cart.linesForShop(shop.id);
+  const cartCount = cart.countForShop(shop.id);
 
-  const reveal = async () => {
-    if (whatsapp || revealing) return;
+  const reveal = async (): Promise<string | null> => {
+    if (whatsapp) return whatsapp;
     setRevealing(true);
     setRevealError(null);
     try {
@@ -46,30 +54,43 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
       if (error) throw error;
       if (!data) {
         setRevealError("Sign in to contact this shop");
-        return;
+        return null;
       }
       setWhatsapp(data as string);
+      return data as string;
     } catch (e) {
       setRevealError(friendlyError(e, "Couldn't reveal the contact. Please try again."));
+      return null;
     } finally {
       setRevealing(false);
     }
   };
 
-  const buildWaUrl = (number: string) => {
-    const digits = number.replace(/\D/g, "");
-    const msg = encodeURIComponent(
-      `Hi! I'm checking VillageFinder. Do you have ${
-        query || matchedItems[0]?.name || "this item"
-      } in stock at ${shop.name}? — Thank you!`,
-    );
-    return `https://wa.me/${digits}?text=${msg}`;
+  const buildBundleMessage = () => {
+    const lines = cartLines.length
+      ? cartLines.map((l) => `• ${l.itemName} × ${l.qty} (${l.unit}) — ₹${l.price * l.qty}`)
+      : [`• ${query || matchedItems[0]?.name || "this item"}`];
+    const total = cartLines.reduce((s, l) => s + l.price * l.qty, 0);
+    return [
+      `Hi ${shop.name}! I'd like to order from VillageFinder:`,
+      "",
+      ...lines,
+      cartLines.length ? `\nTotal: ₹${total}` : "",
+      "",
+      "Please confirm availability. Thank you!",
+    ]
+      .filter(Boolean)
+      .join("\n");
   };
 
-  const handleContactClick = async (e: React.MouseEvent) => {
-    if (whatsapp) return; // let the link follow
-    e.preventDefault();
-    await reveal();
+  const sendOrder = async () => {
+    const num = await reveal();
+    if (!num) return;
+    const url = `https://wa.me/${num.replace(/\D/g, "")}?text=${encodeURIComponent(
+      buildBundleMessage(),
+    )}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    if (cartLines.length) cart.clearShop(shop.id);
   };
 
   const distance = distanceKm ?? (shop.distanceKm > 0 ? shop.distanceKm : null);
@@ -87,6 +108,12 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
             {shop.category}
             {shop.village ? ` · ${shop.village}` : ""}
           </p>
+          {shop.landmark && (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/30 px-2 py-0.5 text-xs font-semibold text-accent-foreground">
+              <LandmarkIcon className="h-3 w-3" />
+              {shop.landmark}
+            </p>
+          )}
           <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             {distance !== null && (
               <span className="inline-flex items-center gap-1">
@@ -105,30 +132,71 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
 
       {matchedItems.length > 0 && (
         <ul className="mt-4 space-y-2">
-          {matchedItems.slice(0, 3).map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between gap-3 rounded-2xl bg-muted/60 px-4 py-3"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-semibold">{item.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  ₹{item.price} / {item.unit} · {timeAgo(item.updatedAt)}
-                </p>
-              </div>
-              {item.status === "in" ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-3 py-1 text-xs font-bold text-success">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  {t("inStock")}
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive">
-                  <XCircle className="h-3.5 w-3.5" />
-                  {t("outOfStock")}
-                </span>
-              )}
-            </li>
-          ))}
+          {matchedItems.slice(0, 5).map((item) => {
+            const inCartLine = cartLines.find((l) => l.itemId === item.id);
+            const localName = localizeItem(item.name, lang);
+            return (
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-muted/60 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-semibold">{localName}</p>
+                  <p className="text-xs text-muted-foreground">
+                    ₹{item.price} / {item.unit} · {timeAgo(item.updatedAt)}
+                  </p>
+                </div>
+                {item.status === "in" ? (
+                  inCartLine ? (
+                    <div className="flex items-center gap-1 rounded-full bg-card px-1 py-1 shadow-soft">
+                      <button
+                        type="button"
+                        onClick={() => cart.setQty(shop.id, item.id, inCartLine.qty - 1)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted"
+                        aria-label="Decrease"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="min-w-[1.5rem] text-center text-sm font-bold">
+                        {inCartLine.qty}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => cart.setQty(shop.id, item.id, inCartLine.qty + 1)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted"
+                        aria-label="Increase"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        cart.addOrIncrement({
+                          shopId: shop.id,
+                          shopName: shop.name,
+                          itemId: item.id,
+                          itemName: item.name,
+                          unit: item.unit,
+                          price: item.price,
+                        })
+                      }
+                      className="inline-flex items-center gap-1 rounded-full bg-success/15 px-3 py-1 text-xs font-bold text-success hover:bg-success/25"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {t("inStock")} · <Plus className="h-3 w-3" />
+                    </button>
+                  )
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-3 py-1 text-xs font-bold text-destructive">
+                    <XCircle className="h-3.5 w-3.5" />
+                    {t("outOfStock")}
+                  </span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 
@@ -140,7 +208,7 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
         {!whatsapp && (
           <button
             type="button"
-            onClick={reveal}
+            onClick={() => reveal()}
             disabled={revealing}
             className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
           >
@@ -153,20 +221,18 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
           </button>
         )}
       </div>
-      {revealError && (
-        <p className="mt-1 text-xs text-destructive">{revealError}</p>
-      )}
+      {revealError && <p className="mt-1 text-xs text-destructive">{revealError}</p>}
 
-      <a
-        href={whatsapp ? buildWaUrl(whatsapp) : "#"}
-        onClick={handleContactClick}
-        target={whatsapp ? "_blank" : undefined}
-        rel="noopener noreferrer"
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-5 py-4 text-base font-bold text-secondary-foreground shadow-soft transition-transform active:scale-[0.98]"
+      <button
+        type="button"
+        onClick={sendOrder}
+        className="bg-whatsapp mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-base font-bold shadow-soft transition-transform active:scale-[0.98]"
       >
         <MessageCircle className="h-5 w-5" />
-        {t("orderWhatsApp")}
-      </a>
+        {cartCount > 0
+          ? `${t("sendOrderWa")} (${cartCount})`
+          : t("orderWhatsApp")}
+      </button>
     </motion.article>
   );
 }

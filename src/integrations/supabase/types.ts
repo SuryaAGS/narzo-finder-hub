@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           aliases: string[]
@@ -114,11 +138,50 @@ export type Database = {
           },
         ]
       }
+      shop_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rating: number
+          shop_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating: number
+          shop_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rating?: number
+          shop_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_ratings_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           category: string
           created_at: string
           id: string
+          landmark: string | null
           latitude: number | null
           longitude: number | null
           name: string
@@ -130,6 +193,7 @@ export type Database = {
           category: string
           created_at?: string
           id?: string
+          landmark?: string | null
           latitude?: number | null
           longitude?: number | null
           name: string
@@ -141,6 +205,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          landmark?: string | null
           latitude?: number | null
           longitude?: number | null
           name?: string
@@ -197,7 +262,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "customer" | "shopkeeper"
+      app_role: "customer" | "shopkeeper" | "admin"
       stock_status: "in" | "out"
     }
     CompositeTypes: {
@@ -326,7 +391,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["customer", "shopkeeper"],
+      app_role: ["customer", "shopkeeper", "admin"],
       stock_status: ["in", "out"],
     },
   },
