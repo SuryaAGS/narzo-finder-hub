@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * AI Search Assistant — given a free-text "need" (e.g. "fever", "biryani night",
