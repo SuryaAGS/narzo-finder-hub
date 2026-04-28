@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
-import { Search, Loader2, Mic, Square, MapPin, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import { Search, Loader2, Mic, Square, MapPin, Sparkles, PackageSearch } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { ShopCard } from "@/components/ShopCard";
 import { t } from "@/lib/i18n";
@@ -93,6 +94,19 @@ function CustomerPage() {
     else if (role === "shopkeeper") navigate({ to: "/merchant" });
     else if (!role) navigate({ to: "/role" });
   }, [authLoading, user, role, navigate]);
+
+  // One-time welcome toast on first arrival per browser session.
+  useEffect(() => {
+    if (authLoading || !user || role !== "customer") return;
+    const key = `vf_welcomed_${user.id}`;
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    toast.success(t("welcomeToast"), {
+      description: t("welcomeToastDesc"),
+      duration: 3500,
+    });
+  }, [authLoading, user, role]);
 
   useEffect(() => {
     let mounted = true;
@@ -426,11 +440,25 @@ function CustomerPage() {
             <Loader2 className="h-4 w-4 animate-spin" /> {t("loading")}
           </div>
         ) : sorted.length === 0 ? (
-          <p className="mt-8 rounded-3xl border border-dashed border-border bg-card/50 p-8 text-center text-muted-foreground">
-            {query.trim()
-              ? t("noResults")
-              : "No shops yet. Shopkeepers will show up here once they register."}
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-8 flex flex-col items-center gap-3 rounded-3xl border border-dashed border-border bg-card/50 p-8 text-center"
+          >
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <PackageSearch className="h-7 w-7" />
+            </div>
+            <p className="font-display text-lg font-bold text-foreground">
+              {query.trim()
+                ? t("noResults")
+                : "No shops yet"}
+            </p>
+            {!query.trim() && (
+              <p className="text-sm text-muted-foreground">
+                Shopkeepers will show up here once they register.
+              </p>
+            )}
+          </motion.div>
         ) : (
           <div className="mt-4 space-y-4">
             {sorted.map(({ shop, items, distance }) => (

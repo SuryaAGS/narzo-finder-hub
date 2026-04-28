@@ -210,13 +210,15 @@
   .text-balance {
     text-wrap: balance;
   }
-  /* Official WhatsApp brand green */
+  /* Official WhatsApp brand green — bright & high-contrast so customers can't miss it */
   .bg-whatsapp {
     background-color: #25d366;
     color: #ffffff;
+    box-shadow: 0 8px 20px -6px rgba(37, 211, 102, 0.55);
   }
   .bg-whatsapp:hover {
     background-color: #1ebe5d;
+    box-shadow: 0 10px 24px -6px rgba(37, 211, 102, 0.7);
   }
   .text-whatsapp {
     color: #25d366;
