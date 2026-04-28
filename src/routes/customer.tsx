@@ -95,6 +95,19 @@ function CustomerPage() {
     else if (!role) navigate({ to: "/role" });
   }, [authLoading, user, role, navigate]);
 
+  // One-time welcome toast on first arrival per browser session.
+  useEffect(() => {
+    if (authLoading || !user || role !== "customer") return;
+    const key = `vf_welcomed_${user.id}`;
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    toast.success(t("welcomeToast"), {
+      description: t("welcomeToastDesc"),
+      duration: 3500,
+    });
+  }, [authLoading, user, role]);
+
   useEffect(() => {
     let mounted = true;
     (async () => {
