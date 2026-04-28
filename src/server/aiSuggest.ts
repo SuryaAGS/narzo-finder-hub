@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 /**
  * AI Search Assistant — given a free-text "need" (e.g. "fever", "biryani night",
@@ -10,6 +11,7 @@ import { createServerFn } from "@tanstack/react-start";
  * promo window; falls back gracefully on error.
  */
 export const aiSuggestItems = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
     const i = input as { query?: unknown; itemNames?: unknown };
     const query = typeof i.query === "string" ? i.query.trim().slice(0, 200) : "";
