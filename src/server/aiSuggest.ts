@@ -11,6 +11,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * promo window; falls back gracefully on error.
  */
 export const aiSuggestItems = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => {
     const i = input as { query?: unknown; itemNames?: unknown };
     const query = typeof i.query === "string" ? i.query.trim().slice(0, 200) : "";
