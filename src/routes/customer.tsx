@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Search, Loader2, Mic, Square, MapPin, Sparkles, PackageSearch } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { ShopCard } from "@/components/ShopCard";
+import { ShopCardSkeleton } from "@/components/ShopCardSkeleton";
+import { LocationSheet } from "@/components/LocationSheet";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +15,7 @@ import { showFriendlyError } from "@/lib/friendlyError";
 import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
+import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { speechLangCode } from "@/lib/inventoryI18n";
 import { getLang } from "@/lib/i18n";
 
