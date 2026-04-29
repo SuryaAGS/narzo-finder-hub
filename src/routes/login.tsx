@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Mail, Loader2 } from "lucide-react";
@@ -128,6 +128,15 @@ function LoginPage() {
           >
             {mode === "signup" ? t("haveAccount") : t("needAccount")}
           </button>
+
+          {mode === "signin" && (
+            <Link
+              to="/forgot-password"
+              className="mt-3 block text-center text-sm font-semibold text-primary underline-offset-4 hover:underline"
+            >
+              {t("forgotPassword")}
+            </Link>
+          )}
         </motion.div>
       </main>
     </div>

@@ -12,6 +12,7 @@ import {
   Minus,
   Landmark as LandmarkIcon,
   Star,
+  Navigation,
 } from "lucide-react";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { timeAgo } from "@/lib/mockData";
@@ -26,6 +27,7 @@ type Props = {
   matchedItems: InventoryItem[];
   query?: string;
   distanceKm?: number | null;
+  shopCoords?: { lat: number; lng: number } | null;
 };
 
 function maskNumber(num: string) {
@@ -35,7 +37,7 @@ function maskNumber(num: string) {
   return `${digits.slice(0, 2)} •••• ${digits.slice(-2)}`;
 }
 
-export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
+export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: Props) {
   const lang = getLang();
   const [whatsapp, setWhatsapp] = useState<string | null>(null);
   const [revealing, setRevealing] = useState(false);
@@ -109,8 +111,9 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
     const url = `https://wa.me/${num.replace(/\D/g, "")}?text=${encodeURIComponent(
       buildBundleMessage(),
     )}`;
-    window.open(url, "_blank", "noopener,noreferrer");
     if (cartLines.length) cart.clearShop(shop.id);
+    // Instant hand-off to native WhatsApp app (no new tab, no blocker).
+    window.location.assign(url);
   };
 
   const distance = distanceKm ?? (shop.distanceKm > 0 ? shop.distanceKm : null);
@@ -249,6 +252,39 @@ export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
         )}
       </div>
       {revealError && <p className="mt-1 text-xs text-destructive">{revealError}</p>}
+
+      {/* Address + directions */}
+      {(shop.village || shop.landmark || shopCoords) && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-muted/40 px-4 py-2.5 text-sm">
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-foreground">
+              {[shop.landmark, shop.village].filter(Boolean).join(", ") || "Address"}
+            </p>
+            {distance !== null && (
+              <p className="text-xs text-muted-foreground">
+                {distance < 1
+                  ? `${Math.round(distance * 1000)} m ${t("distanceAway")}`
+                  : `${distance.toFixed(1)} km ${t("distanceAway")}`}
+              </p>
+            )}
+          </div>
+          <a
+            href={
+              shopCoords
+                ? `https://www.google.com/maps/dir/?api=1&destination=${shopCoords.lat},${shopCoords.lng}`
+                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    [shop.name, shop.landmark, shop.village].filter(Boolean).join(" "),
+                  )}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-card px-3 py-1.5 text-xs font-bold text-primary shadow-soft active:scale-95"
+          >
+            <Navigation className="h-3.5 w-3.5" />
+            {t("getDirections")}
+          </a>
+        </div>
+      )}
 
       <button
         type="button"

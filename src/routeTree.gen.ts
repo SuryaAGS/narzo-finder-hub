@@ -11,9 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ShopkeeperRouteImport } from './routes/shopkeeper'
 import { Route as RoleRouteImport } from './routes/role'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as MerchantRouteImport } from './routes/merchant'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LanguageRouteImport } from './routes/language'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as CustomerRouteImport } from './routes/customer'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -29,6 +31,11 @@ const RoleRoute = RoleRouteImport.update({
   path: '/role',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MerchantRoute = MerchantRouteImport.update({
   id: '/merchant',
   path: '/merchant',
@@ -42,6 +49,11 @@ const LoginRoute = LoginRouteImport.update({
 const LanguageRoute = LanguageRouteImport.update({
   id: '/language',
   path: '/language',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedbackRoute = FeedbackRouteImport.update({
@@ -70,9 +82,11 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/customer': typeof CustomerRoute
   '/feedback': typeof FeedbackRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/role': typeof RoleRoute
   '/shopkeeper': typeof ShopkeeperRoute
 }
@@ -81,9 +95,11 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/customer': typeof CustomerRoute
   '/feedback': typeof FeedbackRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/role': typeof RoleRoute
   '/shopkeeper': typeof ShopkeeperRoute
 }
@@ -93,9 +109,11 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/customer': typeof CustomerRoute
   '/feedback': typeof FeedbackRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/language': typeof LanguageRoute
   '/login': typeof LoginRoute
   '/merchant': typeof MerchantRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/role': typeof RoleRoute
   '/shopkeeper': typeof ShopkeeperRoute
 }
@@ -106,9 +124,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/customer'
     | '/feedback'
+    | '/forgot-password'
     | '/language'
     | '/login'
     | '/merchant'
+    | '/reset-password'
     | '/role'
     | '/shopkeeper'
   fileRoutesByTo: FileRoutesByTo
@@ -117,9 +137,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/customer'
     | '/feedback'
+    | '/forgot-password'
     | '/language'
     | '/login'
     | '/merchant'
+    | '/reset-password'
     | '/role'
     | '/shopkeeper'
   id:
@@ -128,9 +150,11 @@ export interface FileRouteTypes {
     | '/admin'
     | '/customer'
     | '/feedback'
+    | '/forgot-password'
     | '/language'
     | '/login'
     | '/merchant'
+    | '/reset-password'
     | '/role'
     | '/shopkeeper'
   fileRoutesById: FileRoutesById
@@ -140,9 +164,11 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   CustomerRoute: typeof CustomerRoute
   FeedbackRoute: typeof FeedbackRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LanguageRoute: typeof LanguageRoute
   LoginRoute: typeof LoginRoute
   MerchantRoute: typeof MerchantRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RoleRoute: typeof RoleRoute
   ShopkeeperRoute: typeof ShopkeeperRoute
 }
@@ -161,6 +187,13 @@ declare module '@tanstack/react-router' {
       path: '/role'
       fullPath: '/role'
       preLoaderRoute: typeof RoleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/merchant': {
@@ -182,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/language'
       fullPath: '/language'
       preLoaderRoute: typeof LanguageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/feedback': {
@@ -220,9 +260,11 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   CustomerRoute: CustomerRoute,
   FeedbackRoute: FeedbackRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LanguageRoute: LanguageRoute,
   LoginRoute: LoginRoute,
   MerchantRoute: MerchantRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RoleRoute: RoleRoute,
   ShopkeeperRoute: ShopkeeperRoute,
 }

@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Search, Loader2, Mic, Square, MapPin, Sparkles, PackageSearch } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { ShopCard } from "@/components/ShopCard";
+import { ShopCardSkeleton } from "@/components/ShopCardSkeleton";
+import { LocationSheet } from "@/components/LocationSheet";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +15,7 @@ import { showFriendlyError } from "@/lib/friendlyError";
 import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
+import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { speechLangCode } from "@/lib/inventoryI18n";
 import { getLang } from "@/lib/i18n";
 
@@ -86,6 +89,23 @@ function CustomerPage() {
   const [sortMode, setSortMode] = useState<SortMode>("recent");
   const [selectedVillage, setSelectedVillage] = useState<string>("__all");
   const geo = useGeolocation(false);
+  const { area } = useReverseGeocode(geo.coords);
+  const [locSheetOpen, setLocSheetOpen] = useState(false);
+
+  // Open the location bottom sheet on first visit if we don't have coords yet.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (geo.coords) return;
+    const dismissed = sessionStorage.getItem("vf_loc_sheet_dismissed");
+    if (dismissed) return;
+    const timer = setTimeout(() => setLocSheetOpen(true), 600);
+    return () => clearTimeout(timer);
+  }, [geo.coords]);
+
+  // Auto-switch to "nearest" sorting once we have coords.
+  useEffect(() => {
+    if (geo.coords) setSortMode("nearest");
+  }, [geo.coords]);
 
   // Auth gate — only let signed-in customers in.
   useEffect(() => {
@@ -295,7 +315,20 @@ function CustomerPage() {
 
   return (
     <div className="min-h-screen pb-10">
-      <AppHeader title={t("appName")} showLogout />
+      <AppHeader title={t("appName")} showLogout area={area} />
+      <LocationSheet
+        open={locSheetOpen}
+        loading={geo.loading}
+        error={geo.error}
+        onAllow={() => {
+          geo.request();
+          setLocSheetOpen(false);
+        }}
+        onClose={() => {
+          sessionStorage.setItem("vf_loc_sheet_dismissed", "1");
+          setLocSheetOpen(false);
+        }}
+      />
       <main className="mx-auto max-w-2xl px-5 py-6">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -436,8 +469,10 @@ function CustomerPage() {
         </h2>
 
         {loading ? (
-          <div className="mt-10 flex items-center justify-center gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> {t("loading")}
+          <div className="mt-4 space-y-4" aria-busy="true" aria-live="polite">
+            <ShopCardSkeleton />
+            <ShopCardSkeleton />
+            <ShopCardSkeleton />
           </div>
         ) : sorted.length === 0 ? (
           <motion.div
@@ -461,13 +496,14 @@ function CustomerPage() {
           </motion.div>
         ) : (
           <div className="mt-4 space-y-4">
-            {sorted.map(({ shop, items, distance }) => (
+            {sorted.map(({ shop, items, distance, coords }) => (
               <ShopCard
                 key={shop.id}
                 shop={shop}
                 matchedItems={items}
                 query={query}
                 distanceKm={distance}
+                shopCoords={coords}
               />
             ))}
           </div>

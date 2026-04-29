@@ -1,6 +1,7 @@
 import { Outlet, createRootRoute, HeadContent, Scripts, Link } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { CartProvider } from "@/hooks/useCart";
+import { TopProgress } from "@/components/TopProgress";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
@@ -93,6 +94,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <CartProvider>
+      <TopProgress />
       <Outlet />
       <Toaster position="top-center" richColors closeButton />
     </CartProvider>
