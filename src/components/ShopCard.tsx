@@ -111,8 +111,9 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
     const url = `https://wa.me/${num.replace(/\D/g, "")}?text=${encodeURIComponent(
       buildBundleMessage(),
     )}`;
-    window.open(url, "_blank", "noopener,noreferrer");
     if (cartLines.length) cart.clearShop(shop.id);
+    // Instant hand-off to native WhatsApp app (no new tab, no blocker).
+    window.location.assign(url);
   };
 
   const distance = distanceKm ?? (shop.distanceKm > 0 ? shop.distanceKm : null);
