@@ -89,6 +89,23 @@ function CustomerPage() {
   const [sortMode, setSortMode] = useState<SortMode>("recent");
   const [selectedVillage, setSelectedVillage] = useState<string>("__all");
   const geo = useGeolocation(false);
+  const { area } = useReverseGeocode(geo.coords);
+  const [locSheetOpen, setLocSheetOpen] = useState(false);
+
+  // Open the location bottom sheet on first visit if we don't have coords yet.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (geo.coords) return;
+    const dismissed = sessionStorage.getItem("vf_loc_sheet_dismissed");
+    if (dismissed) return;
+    const timer = setTimeout(() => setLocSheetOpen(true), 600);
+    return () => clearTimeout(timer);
+  }, [geo.coords]);
+
+  // Auto-switch to "nearest" sorting once we have coords.
+  useEffect(() => {
+    if (geo.coords) setSortMode("nearest");
+  }, [geo.coords]);
 
   // Auth gate — only let signed-in customers in.
   useEffect(() => {
