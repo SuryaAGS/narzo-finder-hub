@@ -94,6 +94,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <CartProvider>
+      <TopProgress />
       <Outlet />
       <Toaster position="top-center" richColors closeButton />
     </CartProvider>
