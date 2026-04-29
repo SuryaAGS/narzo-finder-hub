@@ -456,8 +456,10 @@ function CustomerPage() {
         </h2>
 
         {loading ? (
-          <div className="mt-10 flex items-center justify-center gap-2 text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> {t("loading")}
+          <div className="mt-4 space-y-4" aria-busy="true" aria-live="polite">
+            <ShopCardSkeleton />
+            <ShopCardSkeleton />
+            <ShopCardSkeleton />
           </div>
         ) : sorted.length === 0 ? (
           <motion.div
