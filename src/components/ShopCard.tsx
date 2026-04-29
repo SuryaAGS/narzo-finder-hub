@@ -12,6 +12,7 @@ import {
   Minus,
   Landmark as LandmarkIcon,
   Star,
+  Navigation,
 } from "lucide-react";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { timeAgo } from "@/lib/mockData";
@@ -26,6 +27,7 @@ type Props = {
   matchedItems: InventoryItem[];
   query?: string;
   distanceKm?: number | null;
+  shopCoords?: { lat: number; lng: number } | null;
 };
 
 function maskNumber(num: string) {
@@ -35,7 +37,7 @@ function maskNumber(num: string) {
   return `${digits.slice(0, 2)} •••• ${digits.slice(-2)}`;
 }
 
-export function ShopCard({ shop, matchedItems, query, distanceKm }: Props) {
+export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: Props) {
   const lang = getLang();
   const [whatsapp, setWhatsapp] = useState<string | null>(null);
   const [revealing, setRevealing] = useState(false);
