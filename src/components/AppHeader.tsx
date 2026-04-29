@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Globe, LogOut, Star, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Globe, LogOut, Star, ShieldCheck, MapPin } from "lucide-react";
 import { PHONE_KEY, ROLE_KEY, t } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -8,6 +8,7 @@ type Props = {
   back?: string;
   title?: string;
   showLogout?: boolean;
+  area?: string | null;
 };
 
 export function AppHeader({ back, title, showLogout }: Props) {
