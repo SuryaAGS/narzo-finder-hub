@@ -11,7 +11,7 @@ type Props = {
   area?: string | null;
 };
 
-export function AppHeader({ back, title, showLogout }: Props) {
+export function AppHeader({ back, title, showLogout, area }: Props) {
   const navigate = useNavigate();
   const { isAdmin, user } = useAuth();
   const logout = async () => {
@@ -23,7 +23,7 @@ export function AppHeader({ back, title, showLogout }: Props) {
   return (
     <header className="sticky top-0 z-30 backdrop-blur-md bg-background/80 border-b border-border/60">
       <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {back ? (
             <Link
               to={back}
@@ -37,8 +37,14 @@ export function AppHeader({ back, title, showLogout }: Props) {
               <span className="font-display text-lg font-bold text-primary-foreground">V</span>
             </div>
           )}
-          <div>
-            <h1 className="font-display text-lg font-bold leading-tight">{title || t("appName")}</h1>
+          <div className="min-w-0">
+            <h1 className="truncate font-display text-lg font-bold leading-tight">{title || t("appName")}</h1>
+            {area && (
+              <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3 shrink-0" />
+                <span className="truncate">{area}</span>
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-1">
