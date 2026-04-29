@@ -496,13 +496,14 @@ function CustomerPage() {
           </motion.div>
         ) : (
           <div className="mt-4 space-y-4">
-            {sorted.map(({ shop, items, distance }) => (
+            {sorted.map(({ shop, items, distance, coords }) => (
               <ShopCard
                 key={shop.id}
                 shop={shop}
                 matchedItems={items}
                 query={query}
                 distanceKm={distance}
+                shopCoords={coords}
               />
             ))}
           </div>
