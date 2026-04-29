@@ -315,7 +315,20 @@ function CustomerPage() {
 
   return (
     <div className="min-h-screen pb-10">
-      <AppHeader title={t("appName")} showLogout />
+      <AppHeader title={t("appName")} showLogout area={area} />
+      <LocationSheet
+        open={locSheetOpen}
+        loading={geo.loading}
+        error={geo.error}
+        onAllow={() => {
+          geo.request();
+          setLocSheetOpen(false);
+        }}
+        onClose={() => {
+          sessionStorage.setItem("vf_loc_sheet_dismissed", "1");
+          setLocSheetOpen(false);
+        }}
+      />
       <main className="mx-auto max-w-2xl px-5 py-6">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
