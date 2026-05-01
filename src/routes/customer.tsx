@@ -245,8 +245,10 @@ function CustomerPage() {
   }, [query, fuse, allItemNames]);
 
   const sorted = useMemo(() => {
-    const arr = [...withDistance];
+    let arr = [...withDistance];
     if (sortMode === "nearest" && geo.coords) {
+      // Coordinate-based filtering: only keep shops within 10km when we have GPS.
+      arr = arr.filter((s) => s.distance !== null && s.distance <= 10);
       arr.sort((a, b) => {
         if (a.distance === null && b.distance === null) return 0;
         if (a.distance === null) return 1;
@@ -467,6 +469,17 @@ function CustomerPage() {
         <h2 className="mt-6 font-display text-xl font-bold">
           {query.trim() ? `Results for "${query.trim()}"` : t("nearbyShops")}
         </h2>
+        {geo.error && !geo.coords && (
+          <p className="mt-2 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-2 text-xs font-semibold text-warning-foreground">
+            {t("locDenied")}
+          </p>
+        )}
+        {geo.coords && sortMode === "nearest" && (
+          <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3" />
+            {t("radius10km")}
+          </p>
+        )}
 
         {loading ? (
           <div className="mt-4 space-y-4" aria-busy="true" aria-live="polite">
