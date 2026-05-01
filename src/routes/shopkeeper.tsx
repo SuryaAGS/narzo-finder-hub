@@ -257,6 +257,24 @@ function ShopkeeperPage() {
             </div>
             <Sparkles className="h-10 w-10 opacity-60" />
           </div>
+          <button
+            type="button"
+            onClick={registerShopLocation}
+            disabled={savingLoc}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-background/15 px-4 py-3 text-sm font-bold text-primary-foreground backdrop-blur-sm ring-1 ring-primary-foreground/20 transition-transform active:scale-[0.98] disabled:opacity-60"
+          >
+            {savingLoc ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MapPin className="h-4 w-4" />
+            )}
+            {shop.latitude && shop.longitude
+              ? t("updateShopLocation")
+              : t("registerShopLocation")}
+            {shop.latitude && shop.longitude && (
+              <span className="ml-1 inline-flex h-2 w-2 rounded-full bg-success" aria-hidden />
+            )}
+          </button>
         </motion.div>
 
         <section className="mt-6">
