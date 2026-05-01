@@ -40,6 +40,8 @@ type DbShop = {
   name: string;
   category: string;
   village: string;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 function ShopkeeperPage() {
@@ -68,7 +70,7 @@ function ShopkeeperPage() {
       try {
         const { data: shops, error: shopsErr } = await supabase
           .from("shops")
-          .select("id, name, category, village")
+          .select("id, name, category, village, latitude, longitude")
           .eq("owner_id", user.id)
           .limit(1);
         if (shopsErr) throw shopsErr;
