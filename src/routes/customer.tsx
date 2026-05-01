@@ -245,8 +245,10 @@ function CustomerPage() {
   }, [query, fuse, allItemNames]);
 
   const sorted = useMemo(() => {
-    const arr = [...withDistance];
+    let arr = [...withDistance];
     if (sortMode === "nearest" && geo.coords) {
+      // Coordinate-based filtering: only keep shops within 10km when we have GPS.
+      arr = arr.filter((s) => s.distance !== null && s.distance <= 10);
       arr.sort((a, b) => {
         if (a.distance === null && b.distance === null) return 0;
         if (a.distance === null) return 1;
