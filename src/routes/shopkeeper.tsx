@@ -11,6 +11,7 @@ import {
   Square,
   Loader2,
   Store,
+  MapPin,
 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { POPULAR_BY_CATEGORY, CATEGORIES, timeAgo } from "@/lib/mockData";
@@ -52,6 +53,43 @@ function ShopkeeperPage() {
   const [loading, setLoading] = useState(true);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
+  const [savingLoc, setSavingLoc] = useState(false);
+
+  const registerShopLocation = async () => {
+    if (!shop) return;
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      toast.error(t("locationSaveFailed"));
+      return;
+    }
+    setSavingLoc(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { data, error } = await supabase
+            .from("shops")
+            .update({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+            })
+            .eq("id", shop.id)
+            .select("id, name, category, village, latitude, longitude")
+            .single();
+          if (error) throw error;
+          if (data) setShop(data as DbShop);
+          toast.success(t("locationSaved"));
+        } catch (e) {
+          showFriendlyError(e, t("locationSaveFailed"));
+        } finally {
+          setSavingLoc(false);
+        }
+      },
+      () => {
+        toast.error(t("locationSaveFailed"));
+        setSavingLoc(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  };
 
   // Auth gate: signed-in users only. A null role is fine here — they may be
   // about to become a shopkeeper via the ShopSetup form (become_shopkeeper RPC).
