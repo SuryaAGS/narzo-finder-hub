@@ -46,13 +46,36 @@ export function LocationSheet({ open, loading, error, onAllow, onClose }: Props)
               <Navigation className="h-7 w-7 text-primary-foreground" />
             </div>
             <h2 id="loc-sheet-title" className="mt-4 font-display text-2xl font-bold">
-              {t("locSheetTitle")}
+              {t("confirmLocation")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{t("locSheetBody")}</p>
 
+            {/* Permission banner */}
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 dark:bg-blue-500/15">
+              <div className="flex min-w-0 items-center gap-2">
+                <MapPin className="h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-blue-900 dark:text-blue-100">
+                    {t("locOff")}
+                  </p>
+                  <p className="truncate text-xs text-blue-800/80 dark:text-blue-200/80">
+                    {t("locOffHelp")}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={onAllow}
+                disabled={loading}
+                className="shrink-0 rounded-full bg-blue-600 px-4 py-2 text-xs font-black uppercase tracking-wider text-white shadow-soft transition-transform active:scale-95 disabled:opacity-60"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t("grant")}
+              </button>
+            </div>
+
             {error && (
               <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                {error}
+                {t("locDenied")}
               </p>
             )}
 
