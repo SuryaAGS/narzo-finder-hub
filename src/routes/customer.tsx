@@ -92,20 +92,66 @@ function CustomerPage() {
   const { area } = useReverseGeocode(geo.coords);
   const [locSheetOpen, setLocSheetOpen] = useState(false);
 
-  // Open the location bottom sheet on first visit if we don't have coords yet.
+  // Open the location bottom sheet immediately after login if we don't have coords.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (geo.coords) return;
+    if (authLoading || !user || role !== "customer") return;
     const dismissed = sessionStorage.getItem("vf_loc_sheet_dismissed");
     if (dismissed) return;
-    const timer = setTimeout(() => setLocSheetOpen(true), 600);
+    const timer = setTimeout(() => setLocSheetOpen(true), 250);
     return () => clearTimeout(timer);
-  }, [geo.coords]);
+  }, [geo.coords, authLoading, user, role]);
 
   // Auto-switch to "nearest" sorting once we have coords.
   useEffect(() => {
     if (geo.coords) setSortMode("nearest");
   }, [geo.coords]);
+
+  // Hydrate coords from the user's saved profile on first load (so distance
+  // works immediately on subsequent sessions without re-prompting GPS).
+  useEffect(() => {
+    if (!user || geo.coords) return;
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("latitude, longitude")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!active || !data) return;
+      if (typeof data.latitude === "number" && typeof data.longitude === "number") {
+        // seed the geo hook's localStorage so distanceKm starts working
+        try {
+          localStorage.setItem(
+            "vf_last_coords",
+            JSON.stringify({ lat: data.latitude, lng: data.longitude }),
+          );
+        } catch {
+          /* ignore */
+        }
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [user, geo.coords]);
+
+  // Persist coords to the customer's profile every time they change.
+  useEffect(() => {
+    if (!user || !geo.coords) return;
+    supabase
+      .from("profiles")
+      .update({ latitude: geo.coords.lat, longitude: geo.coords.lng })
+      .eq("id", user.id)
+      .then(({ error }) => {
+        if (error) {
+          // non-fatal; coords still cached locally
+          console.warn("Could not save customer location:", error.message);
+        }
+      });
+  }, [user, geo.coords]);
+
 
   // Auth gate — only let signed-in customers in.
   useEffect(() => {

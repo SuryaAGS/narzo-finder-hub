@@ -88,6 +88,8 @@ export type Database = {
           display_name: string | null
           id: string
           language: string
+          latitude: number | null
+          longitude: number | null
           updated_at: string
           village: string | null
         }
@@ -96,6 +98,8 @@ export type Database = {
           display_name?: string | null
           id: string
           language?: string
+          latitude?: number | null
+          longitude?: number | null
           updated_at?: string
           village?: string | null
         }
@@ -104,6 +108,8 @@ export type Database = {
           display_name?: string | null
           id?: string
           language?: string
+          latitude?: number | null
+          longitude?: number | null
           updated_at?: string
           village?: string | null
         }
