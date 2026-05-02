@@ -239,6 +239,7 @@ const dict = {
     loading: "లోడ్ అవుతోంది…",
     voiceSearch: "మైక్ నొక్కి మాట్లాడండి",
     enableLocation: "లొకేషన్ ఆన్ చేయండి",
+    updateLocation: "లొకేషన్ అప్‌డేట్ చేయండి",
     sortNearest: "దగ్గరివి ముందు",
     sortRecent: "ఇటీవల నవీకరించినవి",
     showContact: "సంప్రదించండి",
