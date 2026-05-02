@@ -51,6 +51,7 @@ const dict = {
     loading: "Loading…",
     voiceSearch: "Tap mic and speak",
     enableLocation: "Enable location",
+    updateLocation: "Update location",
     sortNearest: "Nearest first",
     sortRecent: "Recently updated",
     showContact: "Show contact",
