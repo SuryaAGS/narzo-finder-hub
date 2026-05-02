@@ -562,9 +562,25 @@ function CustomerPage() {
             <p className="font-display text-lg font-bold text-foreground">
               {query.trim()
                 ? t("noResults")
-                : "No shops yet"}
+                : geo.coords && sortMode === "nearest"
+                  ? "No shops within 10 km"
+                  : "No shops yet"}
             </p>
-            {!query.trim() && (
+            {!query.trim() && geo.coords && sortMode === "nearest" && (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Try widening the search to see all registered shops.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSortMode("recent")}
+                  className="mt-1 rounded-full bg-foreground px-4 py-2 text-sm font-bold text-background shadow-soft active:scale-95"
+                >
+                  Show all shops
+                </button>
+              </>
+            )}
+            {!query.trim() && !(geo.coords && sortMode === "nearest") && (
               <p className="text-sm text-muted-foreground">
                 Shopkeepers will show up here once they register.
               </p>
