@@ -450,9 +450,12 @@ function CustomerPage() {
           {!geo.coords ? (
             <button
               type="button"
-              onClick={geo.request}
+              onClick={() => {
+                sessionStorage.removeItem("vf_loc_sheet_dismissed");
+                setLocSheetOpen(true);
+              }}
               disabled={geo.loading}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 font-semibold shadow-soft active:scale-95 disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gradient-warm px-3 py-1.5 font-semibold text-primary-foreground shadow-warm active:scale-95 disabled:opacity-60"
             >
               {geo.loading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -485,6 +488,20 @@ function CustomerPage() {
                 }`}
               >
                 {t("sortRecent")}
+              </button>
+              <button
+                type="button"
+                onClick={geo.request}
+                disabled={geo.loading}
+                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-soft active:scale-95 disabled:opacity-60"
+                title="Refresh location"
+              >
+                {geo.loading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <MapPin className="h-3 w-3" />
+                )}
+                {t("updateLocation") || "Update"}
               </button>
             </>
           )}
