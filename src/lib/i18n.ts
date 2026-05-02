@@ -145,6 +145,7 @@ const dict = {
     loading: "लोड हो रहा है…",
     voiceSearch: "माइक दबाकर बोलें",
     enableLocation: "लोकेशन चालू करें",
+    updateLocation: "लोकेशन अपडेट करें",
     sortNearest: "नज़दीकी पहले",
     sortRecent: "हाल में अपडेट",
     showContact: "संपर्क दिखाएँ",
