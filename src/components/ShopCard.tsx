@@ -133,6 +133,11 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
             {shop.category}
             {shop.village ? ` · ${shop.village}` : ""}
           </p>
+          {isClosed && (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-bold text-destructive">
+              <XCircle className="h-3 w-3" /> Temporarily Closed
+            </p>
+          )}
           {shop.landmark && (
             <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/30 px-2 py-0.5 text-xs font-semibold text-accent-foreground">
               <LandmarkIcon className="h-3 w-3" />
