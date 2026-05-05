@@ -33,6 +33,7 @@ type DbShop = {
   landmark: string | null;
   latitude: number | null;
   longitude: number | null;
+  is_open: boolean;
   updated_at: string;
   inventory: {
     id: string;
