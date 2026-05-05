@@ -118,11 +118,13 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
 
   const distance = distanceKm ?? (shop.distanceKm > 0 ? shop.distanceKm : null);
 
+  const isClosed = shop.isOpen === false;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-border bg-card p-5 shadow-soft"
+      className={`rounded-3xl border border-border bg-card p-5 shadow-soft ${isClosed ? "opacity-70" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
