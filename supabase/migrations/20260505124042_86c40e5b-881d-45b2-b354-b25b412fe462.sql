@@ -1,0 +1,1 @@
+ALTER TABLE public.shops ADD COLUMN IF NOT EXISTS is_open boolean NOT NULL DEFAULT true;

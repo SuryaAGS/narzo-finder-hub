@@ -187,6 +187,7 @@ export type Database = {
           category: string
           created_at: string
           id: string
+          is_open: boolean
           landmark: string | null
           latitude: number | null
           longitude: number | null
@@ -199,6 +200,7 @@ export type Database = {
           category: string
           created_at?: string
           id?: string
+          is_open?: boolean
           landmark?: string | null
           latitude?: number | null
           longitude?: number | null
@@ -211,6 +213,7 @@ export type Database = {
           category?: string
           created_at?: string
           id?: string
+          is_open?: boolean
           landmark?: string | null
           latitude?: number | null
           longitude?: number | null
