@@ -73,7 +73,7 @@ function ShopkeeperPage() {
               longitude: pos.coords.longitude,
             })
             .eq("id", shop.id)
-            .select("id, name, category, village, latitude, longitude")
+            .select("id, name, category, village, latitude, longitude, is_open")
             .single();
           if (error) throw error;
           if (data) setShop(data as DbShop);
