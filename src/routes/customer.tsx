@@ -8,6 +8,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { ShopCard } from "@/components/ShopCard";
 import { ShopCardSkeleton } from "@/components/ShopCardSkeleton";
 import { LocationSheet } from "@/components/LocationSheet";
+import { LocationHelpDialog } from "@/components/LocationHelpDialog";
+import { HelpCircle } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
