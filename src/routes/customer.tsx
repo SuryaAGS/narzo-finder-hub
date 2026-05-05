@@ -513,7 +513,16 @@ function CustomerPage() {
             </>
           )}
           {geo.error && (
-            <span className="text-xs text-muted-foreground">{geo.error}</span>
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              {geo.error}
+              <button
+                type="button"
+                onClick={() => setLocHelpOpen(true)}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-semibold text-foreground hover:bg-muted"
+              >
+                <HelpCircle className="h-3 w-3" /> How to enable location?
+              </button>
+            </span>
           )}
 
           {villages.length > 0 && (
