@@ -298,9 +298,11 @@ function CustomerPage() {
     let arr = [...withDistance];
     // Strict 10km filtering whenever we have GPS coordinates AND the user has
     // NOT manually picked a village. Picking a village is the explicit
-    // "show me a different area" fallback and should bypass the radius.
+    // "show me a different area" fallback and bypasses the radius.
     if (geo.coords && !villagePicked) {
       arr = arr.filter((s) => s.distance !== null && s.distance <= 10);
+    }
+    if ((sortMode === "nearest" || (geo.coords && !villagePicked)) && geo.coords) {
       arr.sort((a, b) => {
         if (a.distance === null && b.distance === null) return 0;
         if (a.distance === null) return 1;
@@ -309,7 +311,7 @@ function CustomerPage() {
       });
     }
     return arr;
-  }, [withDistance, geo.coords, villagePicked]);
+  }, [withDistance, sortMode, geo.coords, villagePicked]);
 
   // Web Speech API → search bar
   const recRef = useRef<{ stop: () => void } | null>(null);
