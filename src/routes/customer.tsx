@@ -585,27 +585,35 @@ function CustomerPage() {
             <p className="font-display text-lg font-bold text-foreground">
               {query.trim()
                 ? t("noResults")
-                : geo.coords && sortMode === "nearest"
-                  ? "No shops within 10 km"
+                : geo.coords && !villagePicked
+                  ? "No shops found nearby"
                   : "No shops yet"}
             </p>
-            {!query.trim() && geo.coords && sortMode === "nearest" && (
+            {!query.trim() && geo.coords && !villagePicked && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Try widening the search to see all registered shops.
+                  No shops within 10 km of your location. Try selecting a village manually.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setSortMode("recent")}
-                  className="mt-1 rounded-full bg-foreground px-4 py-2 text-sm font-bold text-background shadow-soft active:scale-95"
-                >
-                  Show all shops
-                </button>
+                {villages.length > 0 && (
+                  <select
+                    value={selectedVillage}
+                    onChange={(e) => setSelectedVillage(e.target.value)}
+                    className="mt-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-soft outline-none"
+                    aria-label={t("chooseArea")}
+                  >
+                    <option value="__all">Select a village…</option>
+                    {villages.map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </>
             )}
-            {!query.trim() && !(geo.coords && sortMode === "nearest") && (
+            {!query.trim() && !geo.coords && (
               <p className="text-sm text-muted-foreground">
-                Shopkeepers will show up here once they register.
+                Enable location or pick a village from the dropdown above.
               </p>
             )}
           </motion.div>
