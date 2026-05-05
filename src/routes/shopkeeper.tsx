@@ -457,7 +457,7 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
       // Refetch the row so we have the canonical shape.
       const { data: row, error: rowErr } = await supabase
         .from("shops")
-        .select("id, name, category, village, latitude, longitude")
+        .select("id, name, category, village, latitude, longitude, is_open")
         .eq("id", shopId as string)
         .maybeSingle();
       if (rowErr) throw rowErr;
