@@ -47,7 +47,7 @@ type DbShop = {
 };
 
 function toShopCardData(s: DbShop): {
-  shop: Shop & { landmark: string | null };
+  shop: Shop & { landmark: string | null; isOpen: boolean };
   items: InventoryItem[];
   coords: Coords | null;
 } {
@@ -60,13 +60,14 @@ function toShopCardData(s: DbShop): {
     status: i.status,
     updatedAt: new Date(i.updated_at).getTime(),
   }));
-  const shop: Shop & { landmark: string | null } = {
+  const shop: Shop & { landmark: string | null; isOpen: boolean } = {
     id: s.id,
     name: s.name,
     owner: "",
     category: s.category,
     village: s.village,
     landmark: s.landmark,
+    isOpen: s.is_open ?? true,
     distanceKm: 0,
     whatsapp: "",
     updatedAt: new Date(s.updated_at).getTime(),
@@ -81,7 +82,7 @@ function toShopCardData(s: DbShop): {
 
 type SortMode = "nearest" | "recent";
 
-type ShopRow = { shop: Shop & { landmark: string | null }; items: InventoryItem[]; coords: Coords | null };
+type ShopRow = { shop: Shop & { landmark: string | null; isOpen: boolean }; items: InventoryItem[]; coords: Coords | null };
 
 function CustomerPage() {
   const navigate = useNavigate();
