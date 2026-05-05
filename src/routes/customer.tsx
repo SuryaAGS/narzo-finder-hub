@@ -383,6 +383,7 @@ function CustomerPage() {
           setLocSheetOpen(false);
         }}
       />
+      <LocationHelpDialog open={locHelpOpen} onClose={() => setLocHelpOpen(false)} />
       <main className="mx-auto max-w-2xl px-5 py-6">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
