@@ -8,6 +8,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { ShopCard } from "@/components/ShopCard";
 import { ShopCardSkeleton } from "@/components/ShopCardSkeleton";
 import { LocationSheet } from "@/components/LocationSheet";
+import { LocationHelpDialog } from "@/components/LocationHelpDialog";
+import { HelpCircle } from "lucide-react";
 import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,6 +93,7 @@ function CustomerPage() {
   const geo = useGeolocation(false);
   const { area } = useReverseGeocode(geo.coords);
   const [locSheetOpen, setLocSheetOpen] = useState(false);
+  const [locHelpOpen, setLocHelpOpen] = useState(false);
 
   // Open the location bottom sheet immediately after login if we don't have coords.
   useEffect(() => {
@@ -290,11 +293,16 @@ function CustomerPage() {
     };
   }, [query, fuse, allItemNames]);
 
+  const villagePicked = selectedVillage !== "__all";
   const sorted = useMemo(() => {
     let arr = [...withDistance];
-    if (sortMode === "nearest" && geo.coords) {
-      // Coordinate-based filtering: only keep shops within 10km when we have GPS.
+    // Strict 10km filtering whenever we have GPS coordinates AND the user has
+    // NOT manually picked a village. Picking a village is the explicit
+    // "show me a different area" fallback and bypasses the radius.
+    if (geo.coords && !villagePicked) {
       arr = arr.filter((s) => s.distance !== null && s.distance <= 10);
+    }
+    if ((sortMode === "nearest" || (geo.coords && !villagePicked)) && geo.coords) {
       arr.sort((a, b) => {
         if (a.distance === null && b.distance === null) return 0;
         if (a.distance === null) return 1;
@@ -303,7 +311,7 @@ function CustomerPage() {
       });
     }
     return arr;
-  }, [withDistance, sortMode, geo.coords]);
+  }, [withDistance, sortMode, geo.coords, villagePicked]);
 
   // Web Speech API → search bar
   const recRef = useRef<{ stop: () => void } | null>(null);
@@ -377,6 +385,7 @@ function CustomerPage() {
           setLocSheetOpen(false);
         }}
       />
+      <LocationHelpDialog open={locHelpOpen} onClose={() => setLocHelpOpen(false)} />
       <main className="mx-auto max-w-2xl px-5 py-6">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -506,7 +515,16 @@ function CustomerPage() {
             </>
           )}
           {geo.error && (
-            <span className="text-xs text-muted-foreground">{geo.error}</span>
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              {geo.error}
+              <button
+                type="button"
+                onClick={() => setLocHelpOpen(true)}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2 py-0.5 font-semibold text-foreground hover:bg-muted"
+              >
+                <HelpCircle className="h-3 w-3" /> How to enable location?
+              </button>
+            </span>
           )}
 
           {villages.length > 0 && (
@@ -533,11 +551,18 @@ function CustomerPage() {
           {query.trim() ? `Results for "${query.trim()}"` : t("nearbyShops")}
         </h2>
         {geo.error && !geo.coords && (
-          <p className="mt-2 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-2 text-xs font-semibold text-warning-foreground">
-            {t("locDenied")}
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded-2xl border border-warning/30 bg-warning/10 px-4 py-2 text-xs font-semibold text-warning-foreground">
+            <span>GPS access denied. Pick a village below to browse shops.</span>
+            <button
+              type="button"
+              onClick={() => setLocHelpOpen(true)}
+              className="inline-flex items-center gap-1 rounded-full bg-card px-2 py-0.5 text-foreground shadow-soft hover:bg-muted"
+            >
+              <HelpCircle className="h-3 w-3" /> How to enable location?
+            </button>
+          </div>
         )}
-        {geo.coords && sortMode === "nearest" && (
+        {geo.coords && !villagePicked && (
           <p className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground">
             <MapPin className="h-3 w-3" />
             {t("radius10km")}
@@ -562,27 +587,35 @@ function CustomerPage() {
             <p className="font-display text-lg font-bold text-foreground">
               {query.trim()
                 ? t("noResults")
-                : geo.coords && sortMode === "nearest"
-                  ? "No shops within 10 km"
+                : geo.coords && !villagePicked
+                  ? "No shops found nearby"
                   : "No shops yet"}
             </p>
-            {!query.trim() && geo.coords && sortMode === "nearest" && (
+            {!query.trim() && geo.coords && !villagePicked && (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Try widening the search to see all registered shops.
+                  No shops within 10 km of your location. Try selecting a village manually.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setSortMode("recent")}
-                  className="mt-1 rounded-full bg-foreground px-4 py-2 text-sm font-bold text-background shadow-soft active:scale-95"
-                >
-                  Show all shops
-                </button>
+                {villages.length > 0 && (
+                  <select
+                    value={selectedVillage}
+                    onChange={(e) => setSelectedVillage(e.target.value)}
+                    className="mt-1 rounded-full border border-border bg-card px-4 py-2 text-sm font-semibold shadow-soft outline-none"
+                    aria-label={t("chooseArea")}
+                  >
+                    <option value="__all">Select a village…</option>
+                    {villages.map((v) => (
+                      <option key={v} value={v}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </>
             )}
-            {!query.trim() && !(geo.coords && sortMode === "nearest") && (
+            {!query.trim() && !geo.coords && (
               <p className="text-sm text-muted-foreground">
-                Shopkeepers will show up here once they register.
+                Enable location or pick a village from the dropdown above.
               </p>
             )}
           </motion.div>
