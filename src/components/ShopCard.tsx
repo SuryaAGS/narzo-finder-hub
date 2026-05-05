@@ -168,6 +168,7 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
       </div>
 
       {matchedItems.length > 0 && (
+        <ul className={`mt-4 space-y-2 ${isClosed ? "pointer-events-none grayscale opacity-60" : ""}`}>
         <ul className="mt-4 space-y-2">
           {matchedItems.slice(0, 5).map((item) => {
             const inCartLine = cartLines.find((l) => l.itemId === item.id);
