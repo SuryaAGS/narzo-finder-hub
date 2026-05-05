@@ -23,7 +23,7 @@ import { friendlyError } from "@/lib/friendlyError";
 import { useCart } from "@/hooks/useCart";
 
 type Props = {
-  shop: Shop & { landmark?: string | null };
+  shop: Shop & { landmark?: string | null; isOpen?: boolean };
   matchedItems: InventoryItem[];
   query?: string;
   distanceKm?: number | null;
