@@ -293,10 +293,13 @@ function CustomerPage() {
     };
   }, [query, fuse, allItemNames]);
 
+  const villagePicked = selectedVillage !== "__all";
   const sorted = useMemo(() => {
     let arr = [...withDistance];
-    if (sortMode === "nearest" && geo.coords) {
-      // Coordinate-based filtering: only keep shops within 10km when we have GPS.
+    // Strict 10km filtering whenever we have GPS coordinates AND the user has
+    // NOT manually picked a village. Picking a village is the explicit
+    // "show me a different area" fallback and should bypass the radius.
+    if (geo.coords && !villagePicked) {
       arr = arr.filter((s) => s.distance !== null && s.distance <= 10);
       arr.sort((a, b) => {
         if (a.distance === null && b.distance === null) return 0;
@@ -306,7 +309,7 @@ function CustomerPage() {
       });
     }
     return arr;
-  }, [withDistance, sortMode, geo.coords]);
+  }, [withDistance, geo.coords, villagePicked]);
 
   // Web Speech API → search bar
   const recRef = useRef<{ stop: () => void } | null>(null);
