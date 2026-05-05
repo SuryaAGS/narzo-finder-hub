@@ -296,12 +296,15 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
       <button
         type="button"
         onClick={sendOrder}
-        className="bg-whatsapp mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-base font-bold shadow-soft transition-transform active:scale-[0.98]"
+        disabled={isClosed}
+        className="bg-whatsapp mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-base font-bold shadow-soft transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <MessageCircle className="h-5 w-5" />
-        {cartCount > 0
-          ? `${t("sendOrderWa")} (${cartCount})`
-          : t("orderWhatsApp")}
+        {isClosed
+          ? "Shop Closed"
+          : cartCount > 0
+            ? `${t("sendOrderWa")} (${cartCount})`
+            : t("orderWhatsApp")}
       </button>
     </motion.article>
   );
