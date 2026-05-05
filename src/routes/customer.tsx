@@ -93,6 +93,7 @@ function CustomerPage() {
   const geo = useGeolocation(false);
   const { area } = useReverseGeocode(geo.coords);
   const [locSheetOpen, setLocSheetOpen] = useState(false);
+  const [locHelpOpen, setLocHelpOpen] = useState(false);
 
   // Open the location bottom sheet immediately after login if we don't have coords.
   useEffect(() => {
