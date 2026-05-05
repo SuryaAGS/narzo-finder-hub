@@ -12,7 +12,18 @@ import {
   Loader2,
   Store,
   MapPin,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { AppHeader } from "@/components/AppHeader";
 import { POPULAR_BY_CATEGORY, CATEGORIES, timeAgo } from "@/lib/mockData";
 import { t } from "@/lib/i18n";
@@ -43,6 +54,7 @@ type DbShop = {
   village: string;
   latitude?: number | null;
   longitude?: number | null;
+  is_open?: boolean;
 };
 
 function ShopkeeperPage() {
@@ -54,6 +66,45 @@ function ShopkeeperPage() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [savingLoc, setSavingLoc] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const toggleShopStatus = async (next: boolean) => {
+    if (!shop) return;
+    setStatusSaving(true);
+    const prev = shop.is_open ?? true;
+    setShop({ ...shop, is_open: next });
+    try {
+      const { error } = await supabase
+        .from("shops")
+        .update({ is_open: next })
+        .eq("id", shop.id);
+      if (error) throw error;
+      toast.success(next ? "Shop is now Open" : "Shop marked Temporarily Closed");
+    } catch (e) {
+      setShop({ ...shop, is_open: prev });
+      showFriendlyError(e, "Couldn't update shop status.");
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  const handleDeleteShop = async () => {
+    if (!shop || deleteConfirm !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from("shops").delete().eq("id", shop.id);
+      if (error) throw error;
+      toast.success("Shop permanently deleted.");
+      await supabase.auth.signOut();
+      navigate({ to: "/login" });
+    } catch (e) {
+      showFriendlyError(e, "Couldn't delete your shop. Please try again.");
+      setDeleting(false);
+    }
+  };
 
   const registerShopLocation = async () => {
     if (!shop) return;
@@ -72,7 +123,7 @@ function ShopkeeperPage() {
               longitude: pos.coords.longitude,
             })
             .eq("id", shop.id)
-            .select("id, name, category, village, latitude, longitude")
+            .select("id, name, category, village, latitude, longitude, is_open")
             .single();
           if (error) throw error;
           if (data) setShop(data as DbShop);
@@ -108,7 +159,7 @@ function ShopkeeperPage() {
       try {
         const { data: shops, error: shopsErr } = await supabase
           .from("shops")
-          .select("id, name, category, village, latitude, longitude")
+          .select("id, name, category, village, latitude, longitude, is_open")
           .eq("owner_id", user.id)
           .limit(1);
         if (shopsErr) throw shopsErr;
@@ -375,7 +426,88 @@ function ShopkeeperPage() {
             </ul>
           </section>
         )}
+        <section className="mt-8 rounded-3xl border border-border bg-card p-5 shadow-soft">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="font-display text-lg font-bold">Shop Status</h2>
+              <p className="text-sm text-muted-foreground">
+                {shop.is_open === false
+                  ? "Customers see your shop as Temporarily Closed."
+                  : "Your shop is visible and accepting orders."}
+              </p>
+            </div>
+            <Switch
+              checked={shop.is_open !== false}
+              onCheckedChange={toggleShopStatus}
+              disabled={statusSaving}
+              aria-label="Toggle shop open/closed"
+            />
+          </div>
+        </section>
+
+        <section className="mt-12 rounded-3xl border-2 border-destructive/40 bg-destructive/5 p-5">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            <h2 className="font-display text-lg font-bold">Danger Zone</h2>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Permanently delete your shop, inventory, and all listings. This cannot be undone.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteConfirm("");
+              setDeleteOpen(true);
+            }}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-destructive px-4 py-3 font-bold text-destructive-foreground shadow-soft active:scale-[0.98]"
+          >
+            <Trash2 className="h-4 w-4" />
+            Permanently Delete Shop
+          </button>
+        </section>
       </main>
+
+      <Dialog open={deleteOpen} onOpenChange={(o) => !deleting && setDeleteOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Permanently delete your shop?
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. All your shop data, inventory, and listings will be
+              deleted forever. Type <span className="font-mono font-bold">DELETE</span> to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <input
+            autoFocus
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="Type DELETE"
+            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 font-mono outline-none focus:border-destructive"
+          />
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleting}
+              className="rounded-2xl border border-border bg-card px-4 py-2.5 font-bold disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteShop}
+              disabled={deleteConfirm !== "DELETE" || deleting}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-destructive px-4 py-2.5 font-bold text-destructive-foreground disabled:opacity-50"
+            >
+              {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Trash2 className="h-4 w-4" />
+              Delete forever
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-3">
@@ -456,7 +588,7 @@ function ShopSetup({ onCreated }: { onCreated: (s: DbShop) => void }) {
       // Refetch the row so we have the canonical shape.
       const { data: row, error: rowErr } = await supabase
         .from("shops")
-        .select("id, name, category, village, latitude, longitude")
+        .select("id, name, category, village, latitude, longitude, is_open")
         .eq("id", shopId as string)
         .maybeSingle();
       if (rowErr) throw rowErr;

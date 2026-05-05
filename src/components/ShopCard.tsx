@@ -23,7 +23,7 @@ import { friendlyError } from "@/lib/friendlyError";
 import { useCart } from "@/hooks/useCart";
 
 type Props = {
-  shop: Shop & { landmark?: string | null };
+  shop: Shop & { landmark?: string | null; isOpen?: boolean };
   matchedItems: InventoryItem[];
   query?: string;
   distanceKm?: number | null;
@@ -118,11 +118,13 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
 
   const distance = distanceKm ?? (shop.distanceKm > 0 ? shop.distanceKm : null);
 
+  const isClosed = shop.isOpen === false;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-3xl border border-border bg-card p-5 shadow-soft"
+      className={`rounded-3xl border border-border bg-card p-5 shadow-soft ${isClosed ? "opacity-70" : ""}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -131,6 +133,11 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
             {shop.category}
             {shop.village ? ` · ${shop.village}` : ""}
           </p>
+          {isClosed && (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-bold text-destructive">
+              <XCircle className="h-3 w-3" /> Temporarily Closed
+            </p>
+          )}
           {shop.landmark && (
             <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-accent/30 px-2 py-0.5 text-xs font-semibold text-accent-foreground">
               <LandmarkIcon className="h-3 w-3" />
@@ -161,7 +168,7 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
       </div>
 
       {matchedItems.length > 0 && (
-        <ul className="mt-4 space-y-2">
+        <ul className={`mt-4 space-y-2 ${isClosed ? "pointer-events-none grayscale opacity-60" : ""}`}>
           {matchedItems.slice(0, 5).map((item) => {
             const inCartLine = cartLines.find((l) => l.itemId === item.id);
             const localName = localizeItem(item.name, lang);
@@ -289,12 +296,15 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
       <button
         type="button"
         onClick={sendOrder}
-        className="bg-whatsapp mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-base font-bold shadow-soft transition-transform active:scale-[0.98]"
+        disabled={isClosed}
+        className="bg-whatsapp mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-base font-bold shadow-soft transition-transform active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
       >
         <MessageCircle className="h-5 w-5" />
-        {cartCount > 0
-          ? `${t("sendOrderWa")} (${cartCount})`
-          : t("orderWhatsApp")}
+        {isClosed
+          ? "Shop Closed"
+          : cartCount > 0
+            ? `${t("sendOrderWa")} (${cartCount})`
+            : t("orderWhatsApp")}
       </button>
     </motion.article>
   );
