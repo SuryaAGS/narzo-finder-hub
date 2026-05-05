@@ -109,7 +109,7 @@ function ShopkeeperPage() {
       try {
         const { data: shops, error: shopsErr } = await supabase
           .from("shops")
-          .select("id, name, category, village, latitude, longitude")
+          .select("id, name, category, village, latitude, longitude, is_open")
           .eq("owner_id", user.id)
           .limit(1);
         if (shopsErr) throw shopsErr;
