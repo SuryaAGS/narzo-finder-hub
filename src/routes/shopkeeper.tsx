@@ -66,6 +66,45 @@ function ShopkeeperPage() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [savingLoc, setSavingLoc] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const toggleShopStatus = async (next: boolean) => {
+    if (!shop) return;
+    setStatusSaving(true);
+    const prev = shop.is_open ?? true;
+    setShop({ ...shop, is_open: next });
+    try {
+      const { error } = await supabase
+        .from("shops")
+        .update({ is_open: next })
+        .eq("id", shop.id);
+      if (error) throw error;
+      toast.success(next ? "Shop is now Open" : "Shop marked Temporarily Closed");
+    } catch (e) {
+      setShop({ ...shop, is_open: prev });
+      showFriendlyError(e, "Couldn't update shop status.");
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  const handleDeleteShop = async () => {
+    if (!shop || deleteConfirm !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase.from("shops").delete().eq("id", shop.id);
+      if (error) throw error;
+      toast.success("Shop permanently deleted.");
+      await supabase.auth.signOut();
+      navigate({ to: "/login" });
+    } catch (e) {
+      showFriendlyError(e, "Couldn't delete your shop. Please try again.");
+      setDeleting(false);
+    }
+  };
 
   const registerShopLocation = async () => {
     if (!shop) return;
