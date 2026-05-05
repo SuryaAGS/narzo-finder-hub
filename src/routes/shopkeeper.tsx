@@ -426,7 +426,88 @@ function ShopkeeperPage() {
             </ul>
           </section>
         )}
+        <section className="mt-8 rounded-3xl border border-border bg-card p-5 shadow-soft">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="font-display text-lg font-bold">Shop Status</h2>
+              <p className="text-sm text-muted-foreground">
+                {shop.is_open === false
+                  ? "Customers see your shop as Temporarily Closed."
+                  : "Your shop is visible and accepting orders."}
+              </p>
+            </div>
+            <Switch
+              checked={shop.is_open !== false}
+              onCheckedChange={toggleShopStatus}
+              disabled={statusSaving}
+              aria-label="Toggle shop open/closed"
+            />
+          </div>
+        </section>
+
+        <section className="mt-12 rounded-3xl border-2 border-destructive/40 bg-destructive/5 p-5">
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
+            <h2 className="font-display text-lg font-bold">Danger Zone</h2>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Permanently delete your shop, inventory, and all listings. This cannot be undone.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteConfirm("");
+              setDeleteOpen(true);
+            }}
+            className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-destructive px-4 py-3 font-bold text-destructive-foreground shadow-soft active:scale-[0.98]"
+          >
+            <Trash2 className="h-4 w-4" />
+            Permanently Delete Shop
+          </button>
+        </section>
       </main>
+
+      <Dialog open={deleteOpen} onOpenChange={(o) => !deleting && setDeleteOpen(o)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Permanently delete your shop?
+            </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. All your shop data, inventory, and listings will be
+              deleted forever. Type <span className="font-mono font-bold">DELETE</span> to confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <input
+            autoFocus
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="Type DELETE"
+            className="w-full rounded-2xl border-2 border-border bg-background px-4 py-3 font-mono outline-none focus:border-destructive"
+          />
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleting}
+              className="rounded-2xl border border-border bg-card px-4 py-2.5 font-bold disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteShop}
+              disabled={deleteConfirm !== "DELETE" || deleting}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-destructive px-4 py-2.5 font-bold text-destructive-foreground disabled:opacity-50"
+            >
+              {deleting && <Loader2 className="h-4 w-4 animate-spin" />}
+              <Trash2 className="h-4 w-4" />
+              Delete forever
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-3">
