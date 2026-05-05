@@ -43,6 +43,7 @@ type DbShop = {
   village: string;
   latitude?: number | null;
   longitude?: number | null;
+  is_open?: boolean;
 };
 
 function ShopkeeperPage() {
