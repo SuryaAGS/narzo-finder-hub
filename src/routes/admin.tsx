@@ -90,10 +90,10 @@ function AdminDashboard() {
           className="rounded-3xl bg-gradient-earth p-6 text-primary-foreground shadow-warm"
         >
           <div className="flex items-center gap-3">
-            <ShieldCheck className="h-7 w-7" />
-            <div>
+            <ShieldCheck className="h-7 w-7 shrink-0" />
+            <div className="min-w-0 flex-1">
               <p className="text-sm opacity-90">Founder</p>
-              <p className="font-display text-2xl font-black">{user.email}</p>
+              <p className="font-display text-2xl font-black truncate" title={user.email ?? undefined}>{user.email}</p>
             </div>
           </div>
         </motion.div>
