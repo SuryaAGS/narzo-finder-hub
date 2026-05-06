@@ -41,10 +41,16 @@ function AdminDashboard() {
   useEffect(() => {
     if (!isAdmin) return;
     let mounted = true;
-    (async () => {
+
+    async function loadAll() {
       try {
-        const [{ data: roles, error: rolesErr }, { data: fb, error: fbErr }] = await Promise.all([
+        const [
+          { data: roles, error: rolesErr },
+          { data: shops, error: shopsErr },
+          { data: fb, error: fbErr },
+        ] = await Promise.all([
           supabase.from("user_roles").select("role"),
+          supabase.from("shops").select("owner_id"),
           supabase
             .from("app_feedback")
             .select("id, rating, comment, created_at")
@@ -52,10 +58,11 @@ function AdminDashboard() {
             .limit(200),
         ]);
         if (rolesErr) throw rolesErr;
+        if (shopsErr) throw shopsErr;
         if (fbErr) throw fbErr;
         if (!mounted) return;
         const customers = (roles ?? []).filter((r) => r.role === "customer").length;
-        const shopkeepers = (roles ?? []).filter((r) => r.role === "shopkeeper").length;
+        const shopkeepers = new Set((shops ?? []).map((s) => s.owner_id)).size;
         setCounts({ customers, shopkeepers });
         setFeedback((fb as Feedback[]) ?? []);
       } catch (e) {
@@ -63,9 +70,32 @@ function AdminDashboard() {
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
+    }
+
+    async function refreshShopkeepers() {
+      const { data, error } = await supabase.from("shops").select("owner_id");
+      if (error || !mounted) return;
+      const shopkeepers = new Set((data ?? []).map((s) => s.owner_id)).size;
+      setCounts((prev) => ({
+        customers: prev?.customers ?? 0,
+        shopkeepers,
+      }));
+    }
+
+    loadAll();
+
+    const channel = supabase
+      .channel("admin-shops")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "shops" },
+        () => refreshShopkeepers(),
+      )
+      .subscribe();
+
     return () => {
       mounted = false;
+      supabase.removeChannel(channel);
     };
   }, [isAdmin]);
 
