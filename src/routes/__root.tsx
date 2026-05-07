@@ -42,6 +42,8 @@ export const Route = createRootRoute({
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "VillageFinder" },
       { name: "mobile-web-app-capable", content: "yes" },
+      { name: "application-name", content: "VillageFinder" },
+      { property: "og:site_name", content: "VillageFinder" },
       { property: "og:title", content: "VillageFinder — Discover Local Shops" },
       { property: "og:description", content: "VillageConnect is a rural discovery PWA for finding local shops and managing inventory." },
       { property: "og:type", content: "website" },
@@ -69,6 +71,18 @@ export const Route = createRootRoute({
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&family=Noto+Sans+Telugu:wght@400;600;700&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "VillageFinder",
+          alternateName: "Village Finder",
+          url: "https://narzo-finder-hub.lovable.app",
+        }),
       },
     ],
   }),
