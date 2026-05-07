@@ -31,7 +31,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "VillageFinder - Discover Local Shops" },
+      { title: "VillageFinder" },
       {
         name: "description",
         content:
@@ -44,7 +44,7 @@ export const Route = createRootRoute({
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "application-name", content: "VillageFinder" },
       { property: "og:site_name", content: "VillageFinder" },
-      { property: "og:title", content: "VillageFinder - Discover Local Shops" },
+      { property: "og:title", content: "VillageFinder" },
       { property: "og:description", content: "VillageConnect is a rural discovery PWA for finding local shops and managing inventory." },
       { property: "og:type", content: "website" },
       { name: "twitter:title", content: "VillageFinder - Discover Local Shops" },
