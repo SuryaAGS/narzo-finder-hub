@@ -1,5 +1,4 @@
 # Village Finder 📍
-Hosting: https://suryaags.github.io/narzo-finder-hub/
 
 **Digitizing Rural Retail Connectivity**
 
@@ -13,7 +12,7 @@ Village Finder is a Progressive Web App (PWA) designed to bridge the digital gap
 ## 🛠️ Built With
 - **Frontend:** React, Tailwind CSS
 - **Tools:** Lovable AI, GitHub
-- **Hosting:** [Your Lovable/GitHub Pages Link]
+- **Hosting:** https://narzo-finder-hub.lovable.app
 
 ## 👨‍💻 Author
 Built by **P.S.S.V.S. Surya** 2nd Year B.Tech IT Student at SRKR Engineering College.
