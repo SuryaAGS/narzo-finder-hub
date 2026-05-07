@@ -12,7 +12,7 @@ Village Finder is a Progressive Web App (PWA) designed to bridge the digital gap
 ## 🛠️ Built With
 - **Frontend:** React, Tailwind CSS
 - **Tools:** Lovable AI, GitHub
-- **Hosting:** https://narzo-finder-hub.lovable.app
+- **Hosting:** [https://narzo-finder-hub.lovable.app](https://narzo-finder-hub.lovable.app)
 
 ## 👨‍💻 Author
 Built by **P.S.S.V.S. Surya** 2nd Year B.Tech IT Student at SRKR Engineering College.
