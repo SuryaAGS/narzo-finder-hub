@@ -42,6 +42,8 @@ export const Route = createRootRoute({
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "apple-mobile-web-app-title", content: "VillageFinder" },
       { name: "mobile-web-app-capable", content: "yes" },
+      { name: "application-name", content: "VillageFinder" },
+      { property: "og:site_name", content: "VillageFinder" },
       { property: "og:title", content: "VillageFinder — Discover Local Shops" },
       { property: "og:description", content: "VillageConnect is a rural discovery PWA for finding local shops and managing inventory." },
       { property: "og:type", content: "website" },
