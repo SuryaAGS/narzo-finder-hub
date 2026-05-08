@@ -324,7 +324,7 @@ function CustomerPage() {
       ctrl.abort();
       clearTimeout(timer);
     };
-  }, [query, fuse, allItemNames]);
+  }, [query, fuse, indexed, allItemNames]);
 
   const villagePicked = selectedVillage !== "__all";
   const sorted = useMemo(() => {
