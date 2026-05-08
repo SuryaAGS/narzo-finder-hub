@@ -18,7 +18,7 @@ import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
-import { speechLangCode } from "@/lib/inventoryI18n";
+import { speechLangCode, localizeItem } from "@/lib/inventoryI18n";
 import { getLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/customer")({
@@ -203,15 +203,28 @@ function CustomerPage() {
     };
   }, []);
 
-  // Build a fuzzy index over all items across all shops.
+  // Build a fuzzy index over all items across all shops. Include the item's
+  // English name, aliases, category, and Telugu + Hindi localized names so a
+  // voice search in any supported language matches.
   const indexed = useMemo(() => {
     return shops.flatMap(({ shop, items, coords }) =>
-      items.map((item) => ({
-        shop,
-        item,
-        coords,
-        search: [item.name, ...(item.aliases ?? [])].join(" "),
-      })),
+      items.map((item) => {
+        const te = localizeItem(item.name, "te");
+        const hi = localizeItem(item.name, "hi");
+        const parts = [
+          item.name,
+          ...(item.aliases ?? []),
+          te,
+          hi,
+          shop.category,
+        ].filter(Boolean);
+        return {
+          shop,
+          item,
+          coords,
+          search: parts.join(" "),
+        };
+      }),
     );
   }, [shops]);
 
@@ -235,9 +248,25 @@ function CustomerPage() {
     const base = selectedVillage === "__all"
       ? shops
       : shops.filter((s) => s.shop.village === selectedVillage);
-    const list = query.trim()
+    const q = query.trim();
+    const list = q
       ? (() => {
-          const matches = fuse.search(query.trim()).map((r) => r.item);
+          // Combine fuzzy (Fuse) + case-insensitive substring matching so
+          // Telugu/Hindi scripts (where Fuse's edit-distance is unreliable)
+          // still match reliably via partial includes.
+          const qLower = q.toLowerCase();
+          const fuzzy = fuse.search(q).map((r) => r.item);
+          const substring = indexed.filter((r) =>
+            r.search.toLowerCase().includes(qLower),
+          );
+          const seen = new Set<string>();
+          const matches: typeof indexed = [];
+          for (const m of [...substring, ...fuzzy]) {
+            const key = `${m.shop.id}:${m.item.id}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            matches.push(m);
+          }
           const allowedShopIds = new Set(base.map((s) => s.shop.id));
           const byShop = new Map<string, ShopRow>();
           for (const m of matches) {
@@ -269,9 +298,11 @@ function CustomerPage() {
     const q = query.trim();
     setAiSuggestions([]);
     if (!q || q.length < 3) return;
-    // Only ask AI when fuzzy search returned 0 matches.
+    // Only ask AI when neither fuzzy nor substring search found anything.
+    const qLower = q.toLowerCase();
     const fuzzyHits = fuse.search(q).length;
-    if (fuzzyHits > 0) return;
+    const substringHits = indexed.some((r) => r.search.toLowerCase().includes(qLower));
+    if (fuzzyHits > 0 || substringHits) return;
     if (allItemNames.length === 0) return;
 
     const ctrl = new AbortController();
@@ -293,7 +324,7 @@ function CustomerPage() {
       ctrl.abort();
       clearTimeout(timer);
     };
-  }, [query, fuse, allItemNames]);
+  }, [query, fuse, indexed, allItemNames]);
 
   const villagePicked = selectedVillage !== "__all";
   const sorted = useMemo(() => {
