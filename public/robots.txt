@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://suryaags.github.io/VillageFinder/sitemap.xml
