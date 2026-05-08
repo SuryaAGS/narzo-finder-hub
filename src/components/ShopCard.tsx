@@ -170,7 +170,7 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
 
       {matchedItems.length > 0 && (
         <ul className={`mt-4 space-y-2 ${isClosed ? "pointer-events-none grayscale opacity-60" : ""}`}>
-          {matchedItems.slice(0, 5).map((item) => {
+          {(expanded ? matchedItems : matchedItems.slice(0, 5)).map((item) => {
             const inCartLine = cartLines.find((l) => l.itemId === item.id);
             const localName = localizeItem(item.name, lang);
             return (
