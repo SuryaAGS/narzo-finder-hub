@@ -31,7 +31,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "VillageFinder — Find local shops & stock" },
+      { title: "VillageFinder" },
       {
         name: "description",
         content:
@@ -44,12 +44,12 @@ export const Route = createRootRoute({
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "application-name", content: "VillageFinder" },
       { property: "og:site_name", content: "VillageFinder" },
-      { property: "og:title", content: "VillageFinder — Find local shops & stock" },
+      { property: "og:title", content: "VillageFinder" },
       { property: "og:description", content: "Find shops, prices and stock in your village. Order on WhatsApp. Built for rural India." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://suryaags.github.io/VillageFinder/" },
       { property: "og:image", content: "https://suryaags.github.io/VillageFinder/social-preview.png" },
-      { name: "twitter:title", content: "VillageFinder — Find local shops & stock" },
+      { name: "twitter:title", content: "VillageFinder" },
       { name: "twitter:description", content: "Find shops, prices and stock in your village. Order on WhatsApp. Built for rural India." },
       { name: "twitter:image", content: "https://suryaags.github.io/VillageFinder/social-preview.png" },
       { name: "twitter:card", content: "summary_large_image" },
