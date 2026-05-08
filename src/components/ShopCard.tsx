@@ -237,6 +237,15 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
           })}
         </ul>
       )}
+      {matchedItems.length > 5 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-2 w-full rounded-full bg-muted/60 px-4 py-2 text-xs font-bold text-primary hover:bg-muted"
+        >
+          {expanded ? "Show Less" : `Show More (${matchedItems.length - 5})`}
+        </button>
+      )}
 
       {/* Masked phone preview */}
       <div className="mt-4 flex items-center justify-between gap-2 rounded-2xl bg-muted/40 px-4 py-2 text-sm">
