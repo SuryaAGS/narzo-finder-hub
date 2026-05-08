@@ -18,7 +18,7 @@ import { aiSuggestItems } from "@/server/aiSuggest";
 import type { Shop, InventoryItem } from "@/lib/mockData";
 import { useGeolocation, distanceKm, type Coords } from "@/hooks/useGeolocation";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
-import { speechLangCode } from "@/lib/inventoryI18n";
+import { speechLangCode, localizeItem } from "@/lib/inventoryI18n";
 import { getLang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/customer")({
