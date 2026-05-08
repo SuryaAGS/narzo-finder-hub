@@ -298,9 +298,11 @@ function CustomerPage() {
     const q = query.trim();
     setAiSuggestions([]);
     if (!q || q.length < 3) return;
-    // Only ask AI when fuzzy search returned 0 matches.
+    // Only ask AI when neither fuzzy nor substring search found anything.
+    const qLower = q.toLowerCase();
     const fuzzyHits = fuse.search(q).length;
-    if (fuzzyHits > 0) return;
+    const substringHits = indexed.some((r) => r.search.toLowerCase().includes(qLower));
+    if (fuzzyHits > 0 || substringHits) return;
     if (allItemNames.length === 0) return;
 
     const ctrl = new AbortController();
