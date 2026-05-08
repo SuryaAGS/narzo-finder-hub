@@ -47,6 +47,7 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
   const cartCount = cart.countForShop(shop.id);
   const [ratingAvg, setRatingAvg] = useState<number | null>(null);
   const [ratingCount, setRatingCount] = useState<number>(0);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -169,7 +170,7 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
 
       {matchedItems.length > 0 && (
         <ul className={`mt-4 space-y-2 ${isClosed ? "pointer-events-none grayscale opacity-60" : ""}`}>
-          {matchedItems.slice(0, 5).map((item) => {
+          {(expanded ? matchedItems : matchedItems.slice(0, 5)).map((item) => {
             const inCartLine = cartLines.find((l) => l.itemId === item.id);
             const localName = localizeItem(item.name, lang);
             return (
@@ -235,6 +236,15 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
             );
           })}
         </ul>
+      )}
+      {matchedItems.length > 5 && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="mt-2 w-full rounded-full bg-muted/60 px-4 py-2 text-xs font-bold text-primary hover:bg-muted"
+        >
+          {expanded ? "Show Less" : `Show More (${matchedItems.length - 5})`}
+        </button>
       )}
 
       {/* Masked phone preview */}
