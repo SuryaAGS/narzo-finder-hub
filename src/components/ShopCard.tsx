@@ -47,6 +47,7 @@ export function ShopCard({ shop, matchedItems, query, distanceKm, shopCoords }: 
   const cartCount = cart.countForShop(shop.id);
   const [ratingAvg, setRatingAvg] = useState<number | null>(null);
   const [ratingCount, setRatingCount] = useState<number>(0);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let active = true;
