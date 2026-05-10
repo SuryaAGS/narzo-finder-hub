@@ -24,6 +24,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AppHeader } from "@/components/AppHeader";
 import { POPULAR_BY_CATEGORY, CATEGORIES, timeAgo } from "@/lib/mockData";
 import { t } from "@/lib/i18n";
@@ -70,6 +80,27 @@ function ShopkeeperPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<DbItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState(false);
+
+  const deleteItem = async () => {
+    if (!itemToDelete) return;
+    setDeletingItem(true);
+    try {
+      const { error } = await supabase
+        .from("inventory")
+        .delete()
+        .eq("id", itemToDelete.id);
+      if (error) throw error;
+      setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
+      toast.success(`"${itemToDelete.name}" deleted.`);
+      setItemToDelete(null);
+    } catch (e) {
+      showFriendlyError(e, "Couldn't delete that item. Please try again.");
+    } finally {
+      setDeletingItem(false);
+    }
+  };
 
   const toggleShopStatus = async (next: boolean) => {
     if (!shop) return;
@@ -386,6 +417,16 @@ function ShopkeeperPage() {
                       </>
                     )}
                   </button>
+                  {existing && (
+                    <button
+                      type="button"
+                      onClick={() => setItemToDelete(existing)}
+                      aria-label={`Delete ${p.name}`}
+                      className="flex shrink-0 items-center justify-center rounded-xl border border-destructive/20 bg-destructive/5 p-2.5 text-destructive transition active:scale-95 hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </li>
               );
             })}
@@ -409,18 +450,28 @@ function ShopkeeperPage() {
                         ₹{i.price} / {i.unit} · {timeAgo(new Date(i.updated_at).getTime())}
                       </p>
                     </div>
-                    <button
-                      onClick={() =>
-                        upsertItem(i.name, { status: i.status === "in" ? "out" : "in" })
-                      }
-                      className={`rounded-xl px-3 py-2 text-xs font-bold ${
-                        i.status === "in"
-                          ? "bg-secondary text-secondary-foreground"
-                          : "bg-destructive/10 text-destructive"
-                      }`}
-                    >
-                      {i.status === "in" ? t("inStock") : t("outOfStock")}
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        onClick={() =>
+                          upsertItem(i.name, { status: i.status === "in" ? "out" : "in" })
+                        }
+                        className={`rounded-xl px-3 py-2 text-xs font-bold ${
+                          i.status === "in"
+                            ? "bg-secondary text-secondary-foreground"
+                            : "bg-destructive/10 text-destructive"
+                        }`}
+                      >
+                        {i.status === "in" ? t("inStock") : t("outOfStock")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setItemToDelete(i)}
+                        aria-label={`Delete ${i.name}`}
+                        className="flex items-center justify-center rounded-xl border border-destructive/20 bg-destructive/5 p-2 text-destructive transition active:scale-95 hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </li>
                 ))}
             </ul>
@@ -508,6 +559,39 @@ function ShopkeeperPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!itemToDelete}
+        onOpenChange={(o) => !deletingItem && !o && setItemToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{itemToDelete?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this item? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingItem}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                deleteItem();
+              }}
+              disabled={deletingItem}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingItem ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting…
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-3">
