@@ -560,6 +560,39 @@ function ShopkeeperPage() {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog
+        open={!!itemToDelete}
+        onOpenChange={(o) => !deletingItem && !o && setItemToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{itemToDelete?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this item? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingItem}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                deleteItem();
+              }}
+              disabled={deletingItem}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingItem ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Deleting…
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-2xl items-center gap-3 px-5 py-3">
           <button
