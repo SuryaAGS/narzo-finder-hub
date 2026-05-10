@@ -80,6 +80,27 @@ function ShopkeeperPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<DbItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState(false);
+
+  const deleteItem = async () => {
+    if (!itemToDelete) return;
+    setDeletingItem(true);
+    try {
+      const { error } = await supabase
+        .from("inventory")
+        .delete()
+        .eq("id", itemToDelete.id);
+      if (error) throw error;
+      setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
+      toast.success(`"${itemToDelete.name}" deleted.`);
+      setItemToDelete(null);
+    } catch (e) {
+      showFriendlyError(e, "Couldn't delete that item. Please try again.");
+    } finally {
+      setDeletingItem(false);
+    }
+  };
 
   const toggleShopStatus = async (next: boolean) => {
     if (!shop) return;
