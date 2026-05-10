@@ -450,18 +450,28 @@ function ShopkeeperPage() {
                         ₹{i.price} / {i.unit} · {timeAgo(new Date(i.updated_at).getTime())}
                       </p>
                     </div>
-                    <button
-                      onClick={() =>
-                        upsertItem(i.name, { status: i.status === "in" ? "out" : "in" })
-                      }
-                      className={`rounded-xl px-3 py-2 text-xs font-bold ${
-                        i.status === "in"
-                          ? "bg-secondary text-secondary-foreground"
-                          : "bg-destructive/10 text-destructive"
-                      }`}
-                    >
-                      {i.status === "in" ? t("inStock") : t("outOfStock")}
-                    </button>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <button
+                        onClick={() =>
+                          upsertItem(i.name, { status: i.status === "in" ? "out" : "in" })
+                        }
+                        className={`rounded-xl px-3 py-2 text-xs font-bold ${
+                          i.status === "in"
+                            ? "bg-secondary text-secondary-foreground"
+                            : "bg-destructive/10 text-destructive"
+                        }`}
+                      >
+                        {i.status === "in" ? t("inStock") : t("outOfStock")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setItemToDelete(i)}
+                        aria-label={`Delete ${i.name}`}
+                        className="flex items-center justify-center rounded-xl border border-destructive/20 bg-destructive/5 p-2 text-destructive transition active:scale-95 hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </li>
                 ))}
             </ul>
