@@ -24,6 +24,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AppHeader } from "@/components/AppHeader";
 import { POPULAR_BY_CATEGORY, CATEGORIES, timeAgo } from "@/lib/mockData";
 import { t } from "@/lib/i18n";
