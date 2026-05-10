@@ -417,6 +417,16 @@ function ShopkeeperPage() {
                       </>
                     )}
                   </button>
+                  {existing && (
+                    <button
+                      type="button"
+                      onClick={() => setItemToDelete(existing)}
+                      aria-label={`Delete ${p.name}`}
+                      className="flex shrink-0 items-center justify-center rounded-xl border border-destructive/20 bg-destructive/5 p-2.5 text-destructive transition active:scale-95 hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </li>
               );
             })}
