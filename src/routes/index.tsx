@@ -44,6 +44,8 @@ function Splash() {
           alt="Village marketplace at golden hour"
           width={1280}
           height={896}
+          fetchPriority="high"
+          decoding="async"
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/30 to-background" />
