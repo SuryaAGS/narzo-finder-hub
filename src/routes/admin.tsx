@@ -9,7 +9,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { showFriendlyError } from "@/lib/friendlyError";
 import { t } from "@/lib/i18n";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/admin")({
+  head: () => {
+    const base = pageHead({
+      title: "Admin — VillageFinder",
+      description: "Internal admin dashboard for VillageFinder.",
+      path: "/admin",
+    });
+    return {
+      ...base,
+      meta: [...base.meta, { name: "robots", content: "noindex,nofollow" }],
+    };
+  },
   component: AdminDashboard,
 });
 

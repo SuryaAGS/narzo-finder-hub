@@ -7,7 +7,15 @@ import { t } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/role")({
+  head: () =>
+    pageHead({
+      title: "Choose your role — VillageFinder",
+      description: "Continue as a customer or as a shopkeeper.",
+      path: "/role",
+    }),
   component: RolePage,
 });
 

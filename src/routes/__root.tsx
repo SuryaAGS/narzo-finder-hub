@@ -31,7 +31,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "VillageFinder" },
+      { title: "VillageFinder — Local shops in rural India" },
       {
         name: "description",
         content:
@@ -56,7 +56,6 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "canonical", href: "https://suryaags.github.io/VillageFinder/" },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", href: "/icon-512.png", type: "image/png" },
       { rel: "apple-touch-icon", href: "/icon-512.png" },

@@ -43,7 +43,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { showFriendlyError } from "@/lib/friendlyError";
 import { toast } from "sonner";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/shopkeeper")({
+  head: () =>
+    pageHead({
+      title: "Shopkeeper dashboard — VillageFinder",
+      description:
+        "Manage your shop inventory: add, update and delete items so villagers can find them.",
+      path: "/shopkeeper",
+    }),
   component: ShopkeeperPage,
 });
 

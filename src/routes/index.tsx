@@ -6,7 +6,16 @@ import heroImg from "@/assets/hero-village.jpg";
 import { LANG_KEY, t, getLang } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/")({
+  head: () =>
+    pageHead({
+      title: "VillageFinder — Local shops in rural India",
+      description:
+        "Find shops, prices and stock in your village. Order on WhatsApp. Built for rural India.",
+      path: "/",
+    }),
   component: Splash,
 });
 

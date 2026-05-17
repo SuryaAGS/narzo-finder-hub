@@ -7,7 +7,15 @@ import { t } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/login")({
+  head: () =>
+    pageHead({
+      title: "Sign in — VillageFinder",
+      description: "Sign in or create your VillageFinder account.",
+      path: "/login",
+    }),
   component: LoginPage,
 });
 

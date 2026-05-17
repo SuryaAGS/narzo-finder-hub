@@ -5,7 +5,15 @@ import { Check } from "lucide-react";
 import { LANGS, type Lang, getLang, setLang, t } from "@/lib/i18n";
 import { AppHeader } from "@/components/AppHeader";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/language")({
+  head: () =>
+    pageHead({
+      title: "Choose language — VillageFinder",
+      description: "Pick English, Telugu or Hindi for the VillageFinder interface.",
+      path: "/language",
+    }),
   component: LanguagePage,
 });
 
