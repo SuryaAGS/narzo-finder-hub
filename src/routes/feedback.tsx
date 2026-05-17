@@ -10,7 +10,15 @@ import { showFriendlyError } from "@/lib/friendlyError";
 import { t } from "@/lib/i18n";
 import { toast } from "sonner";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/feedback")({
+  head: () =>
+    pageHead({
+      title: "Send feedback — VillageFinder",
+      description: "Share suggestions and report issues to the VillageFinder team.",
+      path: "/feedback",
+    }),
   component: FeedbackPage,
 });
 

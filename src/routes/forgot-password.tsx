@@ -8,7 +8,15 @@ import { AppHeader } from "@/components/AppHeader";
 import { t } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/forgot-password")({
+  head: () =>
+    pageHead({
+      title: "Forgot password — VillageFinder",
+      description: "Request a password reset link for your VillageFinder account.",
+      path: "/forgot-password",
+    }),
   component: ForgotPasswordPage,
 });
 

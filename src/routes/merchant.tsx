@@ -1,7 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
+import { pageHead } from "@/lib/seo";
+
 export const Route = createFileRoute("/merchant")({
+  head: () =>
+    pageHead({
+      title: "Merchant — VillageFinder",
+      description: "Redirecting to your shopkeeper dashboard.",
+      path: "/merchant",
+    }),
   component: MerchantRedirect,
 });
 
