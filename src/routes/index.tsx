@@ -9,13 +9,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
-  head: () =>
-    pageHead({
+  head: () => {
+    const base = pageHead({
       title: "VillageFinder — Local shops in rural India",
       description:
         "Find shops, prices and stock in your village. Order on WhatsApp. Built for rural India.",
       path: "/",
-    }),
+    });
+    return {
+      ...base,
+      links: [
+        ...(base.links ?? []),
+        { rel: "preload", as: "image", href: heroImg, fetchpriority: "high" },
+      ],
+    };
+  },
   component: Splash,
 });
 
