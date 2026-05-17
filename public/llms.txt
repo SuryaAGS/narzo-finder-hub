@@ -1,0 +1,21 @@
+# VillageFinder
+
+> Local commerce platform connecting rural shopkeepers with customers in their village. Find shops, check live prices and stock, and order on WhatsApp. Built for rural India with support for English, Telugu, and Hindi.
+
+VillageFinder helps villagers discover nearby shops, search inventory by voice (including Telugu and Hindi), and place orders directly with shopkeepers via WhatsApp. Shopkeepers manage their own inventory; customers browse and order.
+
+## Pages
+
+- [Home](/): Landing page introducing VillageFinder.
+- [Language](/language): Choose interface language (English, Telugu, Hindi).
+- [Login](/login): Sign in or sign up.
+- [Role](/role): Pick customer or shopkeeper role.
+- [Customer](/customer): Browse nearby shops, search inventory by voice or text, order on WhatsApp.
+- [Merchant](/merchant): Shopkeeper dashboard overview.
+- [Shopkeeper](/shopkeeper): Manage shop inventory — add, update, delete items.
+- [Feedback](/feedback): Send feedback to the VillageFinder team.
+
+## Optional
+
+- [Forgot Password](/forgot-password): Request a password reset link.
+- [Reset Password](/reset-password): Set a new password.
