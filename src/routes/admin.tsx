@@ -12,17 +12,17 @@ import { t } from "@/lib/i18n";
 import { pageHead } from "@/lib/seo";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({
-    ...pageHead({
+  head: () => {
+    const base = pageHead({
       title: "Admin — VillageFinder",
       description: "Internal admin dashboard for VillageFinder.",
       path: "/admin",
-    }),
-    meta: [
-      ...pageHead({ title: "Admin — VillageFinder", description: "Internal admin dashboard for VillageFinder.", path: "/admin" }).meta,
-      { name: "robots", content: "noindex,nofollow" },
-    ],
-  }),
+    });
+    return {
+      ...base,
+      meta: [...base.meta, { name: "robots", content: "noindex,nofollow" }],
+    };
+  },
   component: AdminDashboard,
 });
 
